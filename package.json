@@ -26,7 +26,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "setup": "npm install && npm --prefix backend install",
-    "postinstall": "node scripts/postinstall.mjs"
+    "postinstall": "node scripts/postinstall.mjs || exit 0"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.7",
@@ -34,7 +34,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "lucide-react": "^0.468.0",
-    "next": "15.1.3",
+    "next": "15.1.12",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "recharts": "^2.15.0",
@@ -52,7 +52,7 @@
     "@types/react-dom": "^19.0.2",
     "concurrently": "^9.1.0",
     "eslint": "^9.17.0",
-    "eslint-config-next": "15.1.3",
+    "eslint-config-next": "15.1.12",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2"
   }

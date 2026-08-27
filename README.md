@@ -9,7 +9,7 @@ A multi-warehouse inventory and order management module built around a **ledger-
 > | Web app | [muhammadMilon/InventoryFlow](https://github.com/muhammadMilon/InventoryFlow) (this one) | Next.js 15 · React 19 · TypeScript · Tailwind v4 · TanStack Query · Zustand · Recharts | Vercel |
 > | API | [muhammadMilon/InventoryFlow-api](https://github.com/muhammadMilon/InventoryFlow-api) | Node · Express · TypeScript · **Prisma** · PostgreSQL (Neon) · Zod · JWT | Render |
 >
-> During development both live side by side — the API sits in `backend/`, which the root scripts proxy into. It is pushed to its own repository from that folder.
+> This repository contains the web app only. For local development the API is cloned into `backend/` — git-ignored here — and the root scripts (`dev:api`, `db:*`, `test:api`) proxy into it.
 
 ---
 
@@ -34,19 +34,19 @@ A multi-warehouse inventory and order management module built around a **ledger-
 
 | Capability | Where it lives |
 |---|---|
-| Normalised schema: `Product`, `Warehouse`, `StockLevel`, `StockMovement`, `Order`, `OrderItem` | [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma) |
-| Race-safe order placement — two orders for the last unit cannot both succeed | [`backend/src/modules/stock/stock.service.ts`](backend/src/modules/stock/stock.service.ts) |
+| Normalised schema: `Product`, `Warehouse`, `StockLevel`, `StockMovement`, `Order`, `OrderItem` | [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/prisma/schema.prisma) |
+| Race-safe order placement — two orders for the last unit cannot both succeed | [`src/modules/stock/stock.service.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/modules/stock/stock.service.ts) |
 | Every stock change written to an append-only ledger, with the resulting balance | same |
-| Zod validation on every request body, query and param | [`backend/src/middleware/validate.ts`](backend/src/middleware/validate.ts) |
-| JWT auth with refresh-token rotation, plus `ADMIN`/`STAFF` RBAC | [`backend/src/middleware/auth.ts`](backend/src/middleware/auth.ts) |
-| Idempotent order submission — double-click safe | [`backend/src/middleware/idempotency.ts`](backend/src/middleware/idempotency.ts) |
-| Rate limiting on login, orders and the AI endpoint | [`backend/src/middleware/rate-limit.ts`](backend/src/middleware/rate-limit.ts) |
-| Audit logging of admin stock adjustments | [`backend/src/lib/audit.ts`](backend/src/lib/audit.ts) |
+| Zod validation on every request body, query and param | [`src/middleware/validate.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/validate.ts) |
+| JWT auth with refresh-token rotation, plus `ADMIN`/`STAFF` RBAC | [`src/middleware/auth.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/auth.ts) |
+| Idempotent order submission — double-click safe | [`src/middleware/idempotency.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/idempotency.ts) |
+| Rate limiting on login, orders and the AI endpoint | [`src/middleware/rate-limit.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/rate-limit.ts) |
+| Audit logging of admin stock adjustments | [`src/lib/audit.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/lib/audit.ts) |
 | Live-ish product list (3s polling via TanStack Query) | [`src/lib/queries.ts`](src/lib/queries.ts) |
 | Optimistic order creation with rollback | [`src/lib/use-place-order.ts`](src/lib/use-place-order.ts) |
 | Eight dashboard visualisations + low-stock alerting | [`src/components/charts/`](src/components/charts/) |
-| Gemini-written restock brief with a deterministic fallback | [`backend/src/modules/ai/`](backend/src/modules/ai/) |
-| Jest + Supertest integration tests, Playwright end-to-end tests | [`backend/tests/`](backend/tests/), [`tests/`](tests/) |
+| Gemini-written restock brief with a deterministic fallback | [`src/modules/ai/`](https://github.com/muhammadMilon/InventoryFlow-api/tree/main/src/modules/ai) |
+| Jest + Supertest integration tests, Playwright end-to-end tests | API [`tests/`](https://github.com/muhammadMilon/InventoryFlow-api/tree/main/tests), web [`tests/`](tests/) |
 
 ### Demo accounts
 
@@ -64,24 +64,27 @@ Both are seeded, and the login page fills them in with one click.
 **Prerequisites:** Node 20+, and a PostgreSQL database. [Neon](https://neon.tech) free tier is what this was built against.
 
 ```bash
+# 1. Clone both repositories — the API goes into backend/, where the root
+#    scripts expect it (that path is git-ignored by the web app repo)
 git clone https://github.com/muhammadMilon/InventoryFlow.git inventoryflow
 cd inventoryflow
+git clone https://github.com/muhammadMilon/InventoryFlow-api.git backend
 
-# 1. Install both halves
+# 2. Install both halves
 npm run setup                 # npm install here + in backend/
 
-# 2. Configure
+# 3. Configure
 cp .env.example .env.local
 cp backend/.env.example backend/.env
 #    → put your Neon connection string in backend/.env as DATABASE_URL
 #    → generate the two JWT secrets:
 #      node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
-# 3. Create the schema and fill it with 60 days of trading history
+# 4. Create the schema and fill it with 60 days of trading history
 npm run db:migrate
 npm run db:seed
 
-# 4. Run both processes
+# 5. Run both processes
 npm run dev:all               # web on :3000, API on :4000
 ```
 
@@ -150,7 +153,7 @@ Three supporting details:
 - **Retries.** Anything Postgres still rejects as a serialization failure (`P2034`, SQLSTATE `40001`/`40P01`) is retried with full-jitter backoff by `withRetry`.
 - **The pre-flight check is not the safety net.** There *is* a non-locking availability check before the transaction, but it exists purely so a multi-line failure can report every shortfall at once instead of just the first. If stock disappears between that check and the transaction, the atomic `UPDATE` still rejects the order.
 
-Proven by [`backend/tests/orders.test.ts`](backend/tests/orders.test.ts): 30 concurrent single-unit orders against 20 units of stock yield **exactly 20 × 201 and 10 × 409**, with final stock at 0 and the ledger balanced.
+Proven by [`tests/orders.test.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/tests/orders.test.ts): 30 concurrent single-unit orders against 20 units of stock yield **exactly 20 × 201 and 10 × 409**, with final stock at 0 and the ledger balanced.
 
 ### 2. The double-click
 
@@ -221,7 +224,7 @@ Seven decisions worth defending:
 6. **Cancellation writes compensating entries.** It never edits or deletes the original `OUTBOUND` rows. An append-only ledger stays append-only, so "why is this number what it is?" always has a complete answer.
 7. **Order numbers come from an `OrderSequence` row, not `COUNT(*)`.** A count sees only *committed* rows, so every order placed in the same instant derives the same number and all but one lose the unique-index race — and retrying re-reads the same count, so it never converges. A single `INSERT … ON CONFLICT DO UPDATE … RETURNING` allocates atomically instead. Measured before the fix: 30 concurrent orders against 20 units yielded 8 successes rather than 20 — nothing oversold, but twelve valid orders lost to a numbering artefact. ([ADR-015](docs/ARCHITECTURE.md))
 
-Full schema with commentary: [`backend/prisma/schema.prisma`](backend/prisma/schema.prisma).
+Full schema with commentary: [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/prisma/schema.prisma).
 
 ---
 
@@ -290,7 +293,7 @@ npm run test:e2e                                 # Playwright — boots both ser
 ```
 
 **Why the separate `.env.test`.** The integration suite truncates every table
-between files, so it must never inherit `backend/.env`. `tests/setup.ts` loads
+between files, so it must never inherit `backend/.env`. `backend/tests/setup.ts` loads
 `.env.test` *first* and falls back to `.env` only for anything it does not
 define. The example points at a dedicated `inventoryflow_test` **schema** on the
 same server, which is enough isolation to keep your seeded development data
@@ -322,7 +325,7 @@ The e2e suite is `workers: 1` on purpose: parallel workers share one database an
 
 Full walkthrough: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Summary:
 
-**API → Render.** [`backend/render.yaml`](backend/render.yaml) is a blueprint: point Render at the API repo and it provisions the service. Build runs `prisma migrate deploy` — committed migrations only, never `reset`, so a deploy cannot destroy data. JWT secrets are generated by Render, so they never exist outside it. Health check on `/health`. A `Dockerfile` is included as an alternative runtime — non-root user, `tini` for signal forwarding so the graceful shutdown in `server.ts` actually runs on redeploy.
+**API → Render.** [`render.yaml`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/render.yaml) is a blueprint: point Render at the API repo and it provisions the service. Build runs `prisma migrate deploy` — committed migrations only, never `reset`, so a deploy cannot destroy data. JWT secrets are generated by Render, so they never exist outside it. Health check on `/health`. A `Dockerfile` is included as an alternative runtime — non-root user, `tini` for signal forwarding so the graceful shutdown in `server.ts` actually runs on redeploy.
 
 **Web → Vercel.** Set `NEXT_PUBLIC_API_URL` to the Render URL + `/api/v1`.
 
@@ -372,22 +375,8 @@ Full walkthrough: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Summary:
 ## Repository layout
 
 ```
-inventoryflow/
+inventoryflow/                   ← this repo: the web app only
 ├── .github/workflows/ci.yml     typecheck · lint · build · Playwright
-├── backend/                     → pushed to its own repo, deployed to Render
-│   ├── prisma/
-│   │   ├── schema.prisma        the data model, with commentary
-│   │   └── seed.ts              60 days of simulated trading
-│   ├── src/
-│   │   ├── config/env.ts        Zod-validated environment, fails fast on boot
-│   │   ├── lib/                 prisma, errors, tokens, audit, logger
-│   │   ├── middleware/          auth, validate, rate-limit, idempotency, errors
-│   │   ├── modules/             auth · products · warehouses · stock · orders · analytics · ai
-│   │   ├── app.ts               composition root
-│   │   └── server.ts            lifecycle + graceful shutdown
-│   ├── tests/                   Jest + Supertest
-│   ├── render.yaml              Render blueprint
-│   └── Dockerfile               alternative runtime
 ├── docs/
 │   ├── ARCHITECTURE.md          deeper design notes
 │   ├── API.md                   endpoint reference
@@ -406,6 +395,8 @@ inventoryflow/
 ├── tests/                       Playwright end-to-end
 └── vercel.json
 ```
+
+The API is not in this tree. It is its own repository — [muhammadMilon/InventoryFlow-api](https://github.com/muhammadMilon/InventoryFlow-api), deployed to Render — with `prisma/`, `src/{config,lib,middleware,modules}`, its Jest suite, `render.yaml` and a `Dockerfile`. For local full-stack work it is cloned into `backend/`, which is git-ignored here; see [Quick start](#quick-start).
 
 ---
 
