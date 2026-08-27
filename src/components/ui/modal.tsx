@@ -27,11 +27,22 @@ const SIZES = {
 export function Modal({ open, onClose, title, description, children, footer, size = 'md', busy }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null)
 
+  // Held in refs so the effect below can depend on `open` alone. Callers pass an
+  // inline onClose, so any parent re-render — a background refetch, for one — gave
+  // the effect a fresh identity, and re-running it pulled focus back to the
+  // [data-autofocus] field while the user was typing in another one.
+  const onCloseRef = useRef(onClose)
+  const busyRef = useRef(busy)
+  useEffect(() => {
+    onCloseRef.current = onClose
+    busyRef.current = busy
+  })
+
   useEffect(() => {
     if (!open) return
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !busy) onClose()
+      if (event.key === 'Escape' && !busyRef.current) onCloseRef.current()
 
       // Focus trap: keep Tab inside the dialog.
       if (event.key === 'Tab' && panelRef.current) {
@@ -71,7 +82,7 @@ export function Modal({ open, onClose, title, description, children, footer, siz
       document.body.style.overflow = overflow
       previouslyFocused?.focus?.()
     }
-  }, [open, onClose, busy])
+  }, [open])
 
   if (!open || typeof document === 'undefined') return null
 
