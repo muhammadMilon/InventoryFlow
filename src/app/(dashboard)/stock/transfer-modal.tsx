@@ -125,8 +125,9 @@ export function TransferStockModal({ open, onClose }: { open: boolean; onClose: 
 
           <Select label="To" value={toWarehouseId} onChange={(event) => setTo(event.target.value)}>
             {warehouses?.map((warehouse) => (
-              <option key={warehouse.id} value={warehouse.id}>
+              <option key={warehouse.id} value={warehouse.id} disabled={!warehouse.isActive}>
                 {warehouse.code}
+                {warehouse.isActive ? '' : ' (inactive)'}
               </option>
             ))}
           </Select>

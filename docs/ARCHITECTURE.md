@@ -239,3 +239,56 @@ up. Retrying absorbs the burst; a `503` tells the truth about the remainder.
 **Cost.** A saturated server now holds requests longer rather than failing them
 fast. That is the correct trade for placing an order and the wrong one for a
 read — which is why the retry budget is bounded rather than open-ended.
+
+---
+
+## ADR-017 — Optional SKUs, minted from a Postgres `SEQUENCE`
+
+**Decision.** `POST /products` accepts a blank or absent `sku`. When one is not
+supplied the server mints `{CATEGORY_PREFIX}-{NUMBER}` inside the create
+transaction, drawing the number from a standalone sequence:
+
+```sql
+SELECT nextval('"<schema>"."product_sku_seq"')   -- START WITH 1000
+```
+
+The prefix is the category's three-character consonant skeleton — first letter,
+then following consonants, skipping one that repeats the character before it.
+That reproduces the prefixes the catalogue already uses (Electronics → `ELC`,
+Home & Kitchen → `HMK`, Apparel → `APR`, Groceries → `GRC`, Stationery →
+`STN`), so a generated SKU files alongside hand-entered ones rather than
+introducing a second naming style next to them. Uncategorised products get
+`GEN`.
+
+**Why a sequence.** Same failure ADR-015 describes, in a different place:
+`MAX(sku)+1` and `COUNT(*)` read only committed rows, so a burst of creates all
+compute the same next number and every one but the first loses the
+`products_sku_key` race. `nextval` takes no row lock and is explicitly exempt
+from transaction rollback, so two overlapping transactions are *guaranteed*
+different values. Twenty concurrent creates produce twenty distinct SKUs
+(`backend/tests/products-sku.test.ts`).
+
+**Why allocation is still inside the transaction.** Unlike an order number,
+nothing is written before the product row and there is no lock to hold — the
+sequence read is lock-free. Keeping it inside means a rolled-back create leaves
+no partially-claimed state anywhere except the sequence counter itself.
+
+**Why a collision loop.** Nothing stops an admin typing `ELC-1004` by hand, and
+the seeded catalogue occupies numbers in the generator's range. A candidate
+already present is discarded and the next value drawn, bounded at 25 attempts
+so a pathological catalogue cannot spin. The `UNIQUE` index remains the actual
+guarantee: a violation is caught and re-thrown as a `409` naming the SKU.
+
+**Consequence.** Numbers skip — on a rolled-back create, and on a discarded
+candidate. As with order numbers, that is the right trade: a SKU is an
+identifier, not an audited no-gap series.
+
+**Immutability.** `sku` is absent from the update schema and is never written
+after creation, including when `categoryId` changes. The prefix records the
+category a product was *created* under; re-minting would invalidate every
+label, invoice and ledger row already carrying the old value.
+
+**Cost.** Prisma cannot declare a standalone sequence, so it lives in
+`migrations/20260827120000_product_sku_sequence` and is invisible to
+`prisma db push`. Environments built that way — the test schema — bootstrap it
+with the idempotent `ensureSkuSequence()` instead.

@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { AlertTriangle, Boxes, MapPin, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
-import { currency, number } from '@/lib/format'
+import { AlertTriangle, Boxes, MapPin, Pencil, Plus, Warehouse as WarehouseIcon } from 'lucide-react'
+import { cn, currency, number } from '@/lib/format'
 import { useWarehouses } from '@/lib/queries'
 import { useAuthStore } from '@/store/auth-store'
+import type { Warehouse } from '@/types/api'
 import { Card, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, IconButton } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ErrorState, Skeleton } from '@/components/ui/feedback'
 import { WarehouseChart } from '@/components/charts/breakdown-charts'
@@ -16,6 +17,7 @@ import { WarehouseFormModal } from './warehouse-form-modal'
 export default function WarehousesPage() {
   const isAdmin = useAuthStore((state) => state.user?.role === 'ADMIN')
   const [createOpen, setCreateOpen] = useState(false)
+  const [editing, setEditing] = useState<Warehouse | null>(null)
 
   const { data, isLoading, isError, error, refetch } = useWarehouses()
 
@@ -23,6 +25,7 @@ export default function WarehousesPage() {
     units: data?.reduce((sum, warehouse) => sum + warehouse.totalUnits, 0) ?? 0,
     value: data?.reduce((sum, warehouse) => sum + warehouse.stockValue, 0) ?? 0,
     low: data?.reduce((sum, warehouse) => sum + warehouse.lowStockCount, 0) ?? 0,
+    archived: data?.filter((warehouse) => !warehouse.isActive).length ?? 0,
   }
 
   return (
@@ -32,7 +35,8 @@ export default function WarehousesPage() {
           <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Warehouses</h1>
           <p className="mt-1 text-sm text-ink-500">
             {data
-              ? `${data.length} sites holding ${number(totals.units)} units worth ${currency(totals.value)}`
+              ? `${data.length} sites holding ${number(totals.units)} units worth ${currency(totals.value)}` +
+                (totals.archived > 0 ? ` · ${totals.archived} archived` : '')
               : 'Loading sites…'}
           </p>
         </div>
@@ -56,7 +60,10 @@ export default function WarehousesPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {data?.map((warehouse) => (
-              <Card key={warehouse.id} className="flex flex-col overflow-hidden">
+              <Card
+                key={warehouse.id}
+                className={cn('flex flex-col overflow-hidden', !warehouse.isActive && 'opacity-65')}
+              >
                 <div className="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
                   <div className="flex items-start gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
@@ -70,9 +77,20 @@ export default function WarehousesPage() {
                       </p>
                     </div>
                   </div>
-                  <Badge tone={warehouse.isActive ? 'good' : 'neutral'} dot>
-                    {warehouse.isActive ? 'Active' : 'Inactive'}
-                  </Badge>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Badge tone={warehouse.isActive ? 'good' : 'neutral'} dot>
+                      {warehouse.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                    {isAdmin && (
+                      <IconButton
+                        label={`Edit ${warehouse.name}`}
+                        className="size-8 text-ink-400"
+                        onClick={() => setEditing(warehouse)}
+                      >
+                        <Pencil className="size-3.5" />
+                      </IconButton>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 px-5 py-4">
@@ -135,7 +153,14 @@ export default function WarehousesPage() {
         </>
       )}
 
-      <WarehouseFormModal open={createOpen} onClose={() => setCreateOpen(false)} />
+      <WarehouseFormModal
+        open={createOpen || editing !== null}
+        warehouse={editing}
+        onClose={() => {
+          setCreateOpen(false)
+          setEditing(null)
+        }}
+      />
     </div>
   )
 }

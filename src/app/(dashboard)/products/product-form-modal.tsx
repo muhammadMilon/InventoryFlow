@@ -90,11 +90,11 @@ export function ProductFormModal({ open, onClose, product, warehouses, categorie
   const validate = (): boolean => {
     const next: Partial<Record<keyof FormState, string>> = {}
 
-    if (!editing) {
-      if (!form.sku.trim()) next.sku = 'SKU is required'
-      else if (!/^[A-Z0-9][A-Z0-9-]{2,31}$/.test(form.sku.trim().toUpperCase())) {
-        next.sku = '3–32 characters: A–Z, 0–9 and dashes'
-      }
+    // Blank is legal on create — the server mints the SKU. Only a value the
+    // admin actually typed has to satisfy the shape.
+    const typedSku = form.sku.trim().toUpperCase()
+    if (!editing && typedSku && !/^[A-Z0-9][A-Z0-9-]{2,31}$/.test(typedSku)) {
+      next.sku = '3–32 characters: A–Z, 0–9 and dashes'
     }
 
     if (form.name.trim().length < 2) next.name = 'Name must be at least 2 characters'
@@ -138,8 +138,9 @@ export function ProductFormModal({ open, onClose, product, warehouses, categorie
         toast.success('Product updated', { description: form.name })
       } else {
         const openingQty = Number(form.openingQty)
-        await createMutation.mutateAsync({
-          sku: form.sku.trim().toUpperCase(),
+        const created = await createMutation.mutateAsync({
+          // Omitted rather than sent blank, so the server generates one.
+          sku: form.sku.trim().toUpperCase() || undefined,
           name: form.name.trim(),
           description: form.description.trim() || undefined,
           categoryId: form.categoryId || undefined,
@@ -152,7 +153,9 @@ export function ProductFormModal({ open, onClose, product, warehouses, categorie
               ? [{ warehouseId: form.openingWarehouseId, quantity: openingQty }]
               : undefined,
         })
-        toast.success('Product created', {
+        // The SKU comes back from the response, not the form: when it was left
+        // blank this is the admin's first sight of the generated one.
+        toast.success(`Product created — ${created.sku}`, {
           description:
             openingQty > 0
               ? `${form.name} with ${openingQty} units of opening stock`
@@ -203,10 +206,9 @@ export function ProductFormModal({ open, onClose, product, warehouses, categorie
             value={form.sku}
             onChange={(event) => set('sku', event.target.value.toUpperCase())}
             error={errors.sku}
-            placeholder="ELC-1009"
+            placeholder="Leave blank to auto-generate"
             disabled={editing}
-            hint={editing ? 'SKU cannot be changed after creation' : 'Uppercase letters, digits and dashes'}
-            required={!editing}
+            hint={editing ? 'SKU cannot be changed after creation' : 'Auto-generated from category if empty'}
             data-autofocus
           />
           <Select

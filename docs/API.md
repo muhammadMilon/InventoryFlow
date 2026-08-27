@@ -100,7 +100,7 @@ Single product, same shape as an item above.
 
 ```jsonc
 {
-  "sku": "ELC-1009",              // 3–32 chars: A–Z, 0–9, dashes; uppercased
+  "sku": "ELC-1009",              // optional; 3–32 chars: A–Z, 0–9, dashes
   "name": "Aurora 32in Monitor",
   "description": "optional",
   "categoryId": "uuid | null",
@@ -114,11 +114,27 @@ Single product, same shape as an item above.
 }
 ```
 
-`201` with the created product. `409 CONFLICT` on a duplicate SKU.
+`201` with the created product. `409 CONFLICT` on a duplicate SKU, quoting the
+SKU in the message.
+
+**SKU is optional.** Omit it, send `null`, or send a blank/whitespace string and
+the server mints one as `{CATEGORY_PREFIX}-{NUMBER}` — for example `ELC-1009`.
+The prefix is the category's three-character consonant skeleton (Electronics →
+`ELC`, Home & Kitchen → `HMK`, Apparel → `APR`); an uncategorised product gets
+`GEN`. The number comes from the `product_sku_seq` Postgres sequence, read
+inside the create transaction, so concurrent creates can never be handed the
+same one. Numbers start at 1000 and may skip — a SKU is an identifier, not an
+audited no-gap series.
+
+A SKU you do send is trimmed and uppercased *before* validation, so
+`" elc-1009 "` is accepted and stored as `ELC-1009`. Either way the response
+carries the final SKU; that is the value to show the user.
+
+Once set, a SKU never changes — including when the product is re-categorised.
 
 ### `PATCH /products/:id` — **admin**
 
-Any subset of `name`, `description`, `categoryId`, `unitPrice`, `costPrice`, `reorderPoint`, `reorderQty`, `isActive`. SKU is immutable. Writes a `PRODUCT_UPDATED` (or `PRODUCT_ARCHIVED`) audit entry.
+Any subset of `name`, `description`, `categoryId`, `unitPrice`, `costPrice`, `reorderPoint`, `reorderQty`, `isActive`. SKU is immutable — a `sku` in the body is ignored, and changing `categoryId` does not re-mint a generated one. Writes a `PRODUCT_UPDATED` (or `PRODUCT_ARCHIVED`) audit entry.
 
 ### `GET /products/categories` · `POST /products/categories` — **admin**
 

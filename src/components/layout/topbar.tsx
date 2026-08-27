@@ -41,6 +41,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   }
 
   const apiHealthy = Boolean(health?.database.connected) && !healthError
+  const basketLabel = `Resume basket — ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`
 
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-ink-200 bg-white/85 px-4 backdrop-blur-md sm:px-6">
@@ -71,26 +72,32 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         {apiHealthy ? 'API online' : 'API offline'}
       </span>
 
-      <Link
-        href="/orders/new"
-        className="relative rounded-lg p-2 text-ink-500 transition-colors hover:bg-brand-50 hover:text-brand-600"
-        aria-label={`Open order builder${cartCount > 0 ? ` — ${cartCount} items in basket` : ''}`}
-      >
-        <ShoppingCart className="size-[18px]" />
-        {cartCount > 0 && (
+      {/* Only shown with a basket to resume. Empty, it would be a second control
+          pointing at the same page as the New order button beside it. */}
+      {cartCount > 0 && (
+        <Link
+          href="/orders/new"
+          className="relative rounded-lg p-2 text-ink-500 transition-colors hover:bg-brand-50 hover:text-brand-600"
+          aria-label={basketLabel}
+          title={basketLabel}
+        >
+          <ShoppingCart className="size-[18px]" />
           <span className="absolute -right-0.5 -top-0.5 flex min-w-[17px] items-center justify-center rounded-full bg-brand-500 px-1 text-[10px] font-bold leading-[17px] text-white tnum">
             {cartCount > 99 ? '99+' : cartCount}
           </span>
-        )}
-      </Link>
+        </Link>
+      )}
 
+      {/* Icon-only below sm, where the label will not fit. The cart icon used to
+          be the only order entry point on mobile; it no longer always is. */}
       <Button
         size="sm"
         leftIcon={<Plus className="size-3.5" />}
         onClick={() => router.push('/orders/new')}
-        className="hidden sm:inline-flex"
+        aria-label="New order"
+        className="w-8 justify-center px-0 sm:w-auto sm:justify-start sm:px-3"
       >
-        New order
+        <span className="hidden sm:inline">New order</span>
       </Button>
 
       <div className="relative" ref={menuRef}>
