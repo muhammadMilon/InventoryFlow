@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -62,15 +62,15 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
 
       - name: Check out the API repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.API_REPOSITORY }}
           path: backend
@@ -94,12 +94,16 @@ jobs:
           npm ci
           npm --prefix backend ci
 
+      # `npm exec` ignores --prefix for the command's working directory, so the
+      # Prisma CLI ran from the repo root and could not find its schema. Run the
+      # API's own scripts from inside the API checkout instead.
       - name: Prepare the database
         if: steps.guard.outputs.ready == 'true'
+        working-directory: backend
         run: |
-          npm --prefix backend run db:generate
-          npm --prefix backend exec prisma migrate deploy
-          npm --prefix backend run db:seed
+          npm run db:generate
+          npm run db:deploy
+          npm run db:seed
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
           DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
@@ -123,8 +127,9 @@ jobs:
 
       - name: Upload the Playwright report
         if: always() && steps.guard.outputs.ready == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+          if-no-files-found: ignore
