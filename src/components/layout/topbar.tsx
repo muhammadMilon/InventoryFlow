@@ -44,11 +44,11 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
   const basketLabel = `Resume basket — ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-ink-200 bg-white/85 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-20 flex h-14 items-center gap-1.5 border-b border-ink-200 bg-white/85 px-3 backdrop-blur-md sm:h-16 sm:gap-3 sm:px-5 lg:px-8">
       <button
         type="button"
         onClick={onMenuClick}
-        className="-ml-1 rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-900 lg:hidden"
+        className="-ml-1 shrink-0 rounded-lg p-2 text-ink-500 hover:bg-ink-100 hover:text-ink-900 lg:hidden"
         aria-label="Open navigation"
       >
         <Menu className="size-5" />
@@ -77,7 +77,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
       {cartCount > 0 && (
         <Link
           href="/orders/new"
-          className="relative rounded-lg p-2 text-ink-500 transition-colors hover:bg-brand-50 hover:text-brand-600"
+          className="relative shrink-0 rounded-lg p-2 text-ink-500 transition-colors hover:bg-brand-50 hover:text-brand-600"
           aria-label={basketLabel}
           title={basketLabel}
         >
@@ -95,7 +95,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         leftIcon={<Plus className="size-3.5" />}
         onClick={() => router.push('/orders/new')}
         aria-label="New order"
-        className="w-8 justify-center px-0 sm:w-auto sm:justify-start sm:px-3"
+        className="w-9 shrink-0 justify-center px-0 sm:w-auto sm:justify-start sm:px-3"
       >
         <span className="hidden sm:inline">New order</span>
       </Button>
@@ -106,7 +106,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
           onClick={() => setMenuOpen((open) => !open)}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
-          className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 transition-colors hover:bg-ink-100"
+          className="flex shrink-0 items-center gap-2 rounded-lg py-1 pl-1 pr-1.5 transition-colors hover:bg-ink-100 sm:pr-2"
         >
           <span className="flex size-8 items-center justify-center rounded-full bg-brand-500 text-[12px] font-semibold text-white">
             {user ? initials(user.name) : '··'}
@@ -123,7 +123,7 @@ export function Topbar({ onMenuClick }: { onMenuClick: () => void }) {
         {menuOpen && (
           <div
             role="menu"
-            className="animate-fade-rise absolute right-0 top-[calc(100%+6px)] w-64 overflow-hidden rounded-[var(--radius-card)] border border-ink-200 bg-white shadow-[var(--shadow-pop)]"
+            className="animate-fade-rise absolute right-0 top-[calc(100%+6px)] w-[min(16rem,calc(100vw-1.5rem))] overflow-hidden rounded-[var(--radius-card)] border border-ink-200 bg-white shadow-[var(--shadow-pop)]"
           >
             <div className="border-b border-ink-100 px-4 py-3">
               <div className="flex items-center justify-between gap-2">

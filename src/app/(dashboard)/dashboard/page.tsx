@@ -51,14 +51,14 @@ export default function DashboardPage() {
   const orderSpark = data?.salesTrend.map((point) => point.orders) ?? []
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* ---- Header ---- */}
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">
             {greeting()}, {user?.name.split(' ')[0] ?? 'there'}
           </h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-ink-500">
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-ink-500 sm:text-sm">
             Trading summary for the last {days} days
             {dataUpdatedAt > 0 && (
               <>
@@ -69,9 +69,15 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <SegmentedControl value={days} onChange={setDays} options={RANGES} label="Time range" />
-          <Link href="/orders/new">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+          <SegmentedControl
+            value={days}
+            onChange={setDays}
+            options={RANGES}
+            label="Time range"
+            className="w-full xs:w-auto xs:min-w-0 xs:flex-1 sm:flex-none"
+          />
+          <Link href="/orders/new" className="shrink-0">
             <Button size="sm" leftIcon={<ClipboardList className="size-3.5" />}>
               New order
             </Button>
@@ -80,7 +86,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ---- KPI row ---- */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Key metrics">
+      <section className="grid gap-3 xs:grid-cols-2 sm:gap-4 xl:grid-cols-4" aria-label="Key metrics">
         <StatTile
           label={`Revenue · ${days}d`}
           value={summary ? compactCurrency(summary.revenue30d) : '—'}
@@ -130,7 +136,7 @@ export default function DashboardPage() {
       {summary && summary.outOfStockCount > 0 && (
         <Link
           href="/stock?filter=low"
-          className="flex items-center gap-3 rounded-[var(--radius-card)] border border-critical-500/25 bg-critical-50 px-4 py-3 transition-colors hover:bg-critical-50/70"
+          className="flex items-center gap-3 rounded-[var(--radius-card)] border border-critical-500/25 bg-critical-50 px-3 py-3 transition-colors hover:bg-critical-50/70 sm:px-4"
         >
           <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-white text-critical-700">
             <OctagonAlert className="size-4" />
@@ -149,8 +155,8 @@ export default function DashboardPage() {
       )}
 
       {/* ---- Primary charts ---- */}
-      <section className="grid gap-4 lg:grid-cols-3" aria-label="Sales performance">
-        <div className="lg:col-span-2">
+      <section className="grid gap-3 sm:gap-4 xl:grid-cols-3" aria-label="Sales performance">
+        <div className="min-w-0 xl:col-span-2">
           {isLoading ? (
             <Card>
               <CardHeader title="Revenue trend" />
@@ -161,7 +167,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div>
+        <div className="min-w-0">
           {isLoading ? (
             <Card>
               <CardHeader title="Order pipeline" />
@@ -173,7 +179,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2" aria-label="Stock movement and best sellers">
+      <section className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2" aria-label="Stock movement and best sellers">
         {isLoading ? (
           <Card>
             <CardHeader title="Stock movement" />
@@ -193,7 +199,7 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2" aria-label="Inventory distribution">
+      <section className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2" aria-label="Inventory distribution">
         {isLoading ? (
           <Card>
             <CardHeader title="Stock value by category" />
@@ -213,7 +219,7 @@ export default function DashboardPage() {
         )}
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2" aria-label="Stock risk">
+      <section className="grid min-w-0 gap-3 sm:gap-4 lg:grid-cols-2" aria-label="Stock risk">
         {isLoading ? (
           <Card>
             <CardHeader title="Days of cover" />
@@ -234,8 +240,8 @@ export default function DashboardPage() {
       </section>
 
       {/* ---- Alert feed + AI teaser ---- */}
-      <section className="grid gap-4 lg:grid-cols-3" aria-label="Alerts">
-        <Card className="lg:col-span-2">
+      <section className="grid gap-3 sm:gap-4 xl:grid-cols-3" aria-label="Alerts">
+        <Card className="min-w-0 xl:col-span-2">
           <CardHeader
             title="Low stock alerts"
             description="Ordered by urgency — soonest to run out first"
@@ -265,7 +271,7 @@ export default function DashboardPage() {
               {data?.lowStock.slice(0, 6).map((alert) => (
                 <li
                   key={`${alert.productId}-${alert.warehouseId}`}
-                  className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-brand-50/40"
+                  className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-brand-50/40 sm:gap-3 sm:px-5"
                 >
                   <span
                     className={
@@ -375,8 +381,8 @@ export default function DashboardPage() {
       {/* ---- Today strip ---- */}
       {summary && (
         <Card>
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3 px-5 py-4">
-            <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 px-4 py-4 xs:grid-cols-3 sm:flex sm:flex-wrap sm:items-center sm:gap-x-8 sm:gap-y-3 sm:px-5">
+            <div className="col-span-2 flex items-center gap-2 xs:col-span-3 sm:col-span-1">
               <Badge tone="brand" dot>
                 Today
               </Badge>

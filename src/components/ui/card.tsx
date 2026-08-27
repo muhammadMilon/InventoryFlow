@@ -24,18 +24,18 @@ interface CardHeaderProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> 
 export function CardHeader({ title, description, action, icon, className, ...props }: CardHeaderProps) {
   return (
     <div
-      className={cn('flex items-start justify-between gap-4 border-b border-ink-100 px-5 py-4', className)}
+      className={cn('flex flex-wrap items-start justify-between gap-x-4 gap-y-2 border-b border-ink-100 px-4 py-3.5 sm:flex-nowrap sm:px-5 sm:py-4', className)}
       {...props}
     >
-      <div className="flex min-w-0 items-start gap-3">
+      <div className="flex min-w-0 flex-1 items-start gap-3">
         {icon && (
-          <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
+          <span className="mt-0.5 hidden size-8 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600 xs:flex">
             {icon}
           </span>
         )}
         <div className="min-w-0">
-          <h2 className="truncate text-[15px] font-semibold tracking-[-0.01em] text-ink-900">{title}</h2>
-          {description && <p className="mt-0.5 text-[13px] leading-relaxed text-ink-500">{description}</p>}
+          <h2 className="text-[14.5px] font-semibold tracking-[-0.01em] text-ink-900 sm:truncate sm:text-[15px]">{title}</h2>
+          {description && <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-500 sm:text-[13px]">{description}</p>}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -44,13 +44,13 @@ export function CardHeader({ title, description, action, icon, className, ...pro
 }
 
 export function CardBody({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('px-5 py-4', className)} {...props} />
+  return <div className={cn('px-4 py-4 sm:px-5', className)} {...props} />
 }
 
 export function CardFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center gap-3 border-t border-ink-100 bg-ink-50/60 px-5 py-3', className)}
+      className={cn('flex flex-wrap items-center gap-3 border-t border-ink-100 bg-ink-50/60 px-4 py-3 sm:px-5', className)}
       {...props}
     />
   )
@@ -67,9 +67,9 @@ export function SectionTitle({
 }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">{title}</h1>
-        {description && <p className="mt-1 text-sm text-ink-500">{description}</p>}
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">{title}</h1>
+        {description && <p className="mt-1 text-[13px] text-ink-500 sm:text-sm">{description}</p>}
       </div>
       {action}
     </div>

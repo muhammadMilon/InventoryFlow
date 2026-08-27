@@ -67,15 +67,15 @@ export default function AuditPage() {
   }
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Audit log</h1>
-        <p className="mt-1 text-sm text-ink-500">
+    <div className="space-y-4 sm:space-y-5">
+      <div className="min-w-0">
+        <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">Audit log</h1>
+        <p className="mt-1 text-[13px] text-ink-500 sm:text-sm">
           Who did what, when, and from where. Written in the same transaction as the change it describes.
         </p>
       </div>
 
-      <Card className="p-3">
+      <Card className="p-2.5 sm:p-3">
         <Select
           value={action}
           onChange={(event) => {
@@ -83,7 +83,7 @@ export default function AuditPage() {
             setPage(1)
           }}
           aria-label="Filter by action"
-          className="w-[230px]"
+          className="w-full sm:w-[230px]"
         >
           {ACTIONS.map((option) => (
             <option key={option.value} value={option.value}>

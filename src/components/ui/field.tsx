@@ -11,8 +11,13 @@ import {
 import { AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/format'
 
+/**
+ * `text-base` below sm is not a style choice: iOS Safari zooms the viewport
+ * whenever a focused control has a font-size under 16px, and there is no way
+ * back out of that zoom without a pinch. 14px returns from sm upwards.
+ */
 const CONTROL =
-  'w-full rounded-lg border bg-white px-3 text-sm text-ink-900 placeholder:text-ink-400 transition-colors ' +
+  'w-full rounded-lg border bg-white px-3 text-base text-ink-900 placeholder:text-ink-400 transition-colors sm:text-sm ' +
   'focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-500/10 ' +
   'disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-400'
 
@@ -167,18 +172,23 @@ export function SegmentedControl<T extends string | number>({
   options,
   label,
   size = 'md',
+  className,
 }: {
   value: T
   onChange: (value: T) => void
   options: Array<{ value: T; label: string }>
   label?: string
   size?: 'sm' | 'md'
+  className?: string
 }) {
   return (
     <div
       role="radiogroup"
       aria-label={label}
-      className="inline-flex items-center gap-0.5 rounded-lg border border-ink-200 bg-ink-50 p-0.5"
+      className={cn(
+        'inline-flex max-w-full items-center gap-0.5 overflow-x-auto rounded-lg border border-ink-200 bg-ink-50 p-0.5',
+        className,
+      )}
     >
       {options.map((option) => {
         const active = option.value === value
@@ -190,8 +200,8 @@ export function SegmentedControl<T extends string | number>({
             aria-checked={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              'rounded-[6px] font-medium transition-all',
-              size === 'sm' ? 'px-2.5 py-1 text-[12px]' : 'px-3 py-1.5 text-[13px]',
+              'shrink-0 whitespace-nowrap rounded-[6px] font-medium transition-all',
+              size === 'sm' ? 'px-2.5 py-1 text-[12px]' : 'px-2.5 py-1.5 text-[12.5px] sm:px-3 sm:text-[13px]',
               active
                 ? 'bg-white text-ink-900 shadow-[var(--shadow-card)]'
                 : 'text-ink-500 hover:text-ink-800',

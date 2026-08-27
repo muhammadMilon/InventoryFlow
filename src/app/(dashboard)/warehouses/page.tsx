@@ -29,11 +29,11 @@ export default function WarehousesPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Warehouses</h1>
-          <p className="mt-1 text-sm text-ink-500">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">Warehouses</h1>
+          <p className="mt-1 text-[13px] text-ink-500 sm:text-sm">
             {data
               ? `${data.length} sites holding ${number(totals.units)} units worth ${currency(totals.value)}` +
                 (totals.archived > 0 ? ` · ${totals.archived} archived` : '')
@@ -42,7 +42,11 @@ export default function WarehousesPage() {
         </div>
 
         {isAdmin && (
-          <Button leftIcon={<Plus className="size-4" />} onClick={() => setCreateOpen(true)}>
+          <Button
+            leftIcon={<Plus className="size-4" />}
+            onClick={() => setCreateOpen(true)}
+            className="w-full justify-center sm:w-auto"
+          >
             New warehouse
           </Button>
         )}
@@ -51,20 +55,20 @@ export default function WarehousesPage() {
       {isError ? (
         <ErrorState error={error} onRetry={() => void refetch()} />
       ) : isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-[196px] w-full rounded-[var(--radius-card)]" />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
             {data?.map((warehouse) => (
               <Card
                 key={warehouse.id}
                 className={cn('flex flex-col overflow-hidden', !warehouse.isActive && 'opacity-65')}
               >
-                <div className="flex items-start justify-between gap-3 border-b border-ink-100 px-5 py-4">
+                <div className="flex items-start justify-between gap-3 border-b border-ink-100 px-4 py-4 sm:px-5">
                   <div className="flex items-start gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-600">
                       <WarehouseIcon className="size-4" />
@@ -93,7 +97,7 @@ export default function WarehousesPage() {
                   </div>
                 </div>
 
-                <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 px-5 py-4">
+                <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-3 px-4 py-4 sm:px-5">
                   {[
                     { label: 'Units on hand', value: number(warehouse.totalUnits) },
                     { label: 'Distinct SKUs', value: number(warehouse.skuCount) },
@@ -107,7 +111,7 @@ export default function WarehousesPage() {
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 border-t border-ink-100 bg-ink-50/50 px-5 py-3">
+                <div className="flex items-center justify-between gap-2 border-t border-ink-100 bg-ink-50/50 px-4 py-3 sm:px-5">
                   <span className="font-mono text-[11.5px] font-medium text-ink-500">{warehouse.code}</span>
 
                   {warehouse.lowStockCount > 0 ? (
@@ -134,7 +138,7 @@ export default function WarehousesPage() {
               description="A design note, since it drives most of the schema."
               icon={<Boxes className="size-4" />}
             />
-            <div className="space-y-2.5 px-5 py-4 text-[13px] leading-relaxed text-ink-600">
+            <div className="space-y-2.5 px-4 py-4 text-[12.5px] leading-relaxed text-ink-600 sm:px-5 sm:text-[13px]">
               <p>
                 Quantity is never a column on <code className="rounded bg-ink-100 px-1 py-0.5 text-[12px]">Product</code>.
                 A product exists in many sites at once, so the on-hand figure belongs to the{' '}
@@ -143,7 +147,7 @@ export default function WarehousesPage() {
               </p>
               <p>
                 That normalisation is what makes the atomic decrement possible: the conditional{' '}
-                <code className="rounded bg-ink-100 px-1 py-0.5 text-[12px]">UPDATE … WHERE quantity ≥ n</code>{' '}
+                <code className="break-words rounded bg-ink-100 px-1 py-0.5 text-[12px]">UPDATE … WHERE quantity ≥ n</code>{' '}
                 targets exactly one row, so Postgres can lock it and serialise two concurrent orders for the
                 last unit. A denormalised total would need a lock on the product row and would still be wrong
                 the moment two warehouses ship at once.

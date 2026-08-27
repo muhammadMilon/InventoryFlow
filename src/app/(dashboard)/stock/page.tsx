@@ -55,23 +55,30 @@ function StockPageInner() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Stock ledger</h1>
-          <p className="mt-1 text-sm text-ink-500">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">Stock ledger</h1>
+          <p className="mt-1 text-[13px] text-ink-500 sm:text-sm">
             Every unit that moved, why it moved, and who moved it.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <SegmentedControl value={tab} onChange={setTab} options={tabs} label="Stock view" />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+          <SegmentedControl
+            value={tab}
+            onChange={setTab}
+            options={tabs}
+            label="Stock view"
+            className="w-full xs:w-auto xs:min-w-0 xs:flex-1 sm:flex-none"
+          />
           {isAdmin && (
             <Button
               variant="outline"
               size="sm"
               leftIcon={<ArrowLeftRight className="size-3.5" />}
               onClick={() => setTransferOpen(true)}
+              className="shrink-0"
             >
               Transfer
             </Button>
@@ -121,9 +128,9 @@ function StockLevelsPanel({ initialLowOnly }: { initialLowOnly: boolean }) {
 
   return (
     <>
-      <Card className="p-3">
-        <div className="flex flex-wrap items-start gap-2">
-          <div className="min-w-[200px] flex-1">
+      <Card className="p-2.5 sm:p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
+          <div className="w-full sm:min-w-[200px] sm:flex-1">
             <Input
               placeholder="Search product or SKU…"
               value={search}
@@ -149,7 +156,7 @@ function StockLevelsPanel({ initialLowOnly }: { initialLowOnly: boolean }) {
             value={warehouseId}
             onChange={(event) => setWarehouseId(event.target.value)}
             aria-label="Warehouse"
-            className="w-[200px]"
+            className="w-full sm:w-[200px]"
           >
             <option value="">All warehouses</option>
             {warehouses?.map((warehouse) => (
@@ -164,7 +171,7 @@ function StockLevelsPanel({ initialLowOnly }: { initialLowOnly: boolean }) {
             onClick={() => setLowOnly((value) => !value)}
             aria-pressed={lowOnly}
             className={cn(
-              'inline-flex h-10 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-colors',
+              'inline-flex h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-colors sm:w-auto',
               lowOnly
                 ? 'border-serious-500/30 bg-serious-50 text-serious-700'
                 : 'border-ink-300 bg-white text-ink-600 hover:border-brand-300 hover:bg-brand-50',
@@ -281,8 +288,8 @@ function LedgerPanel() {
 
   return (
     <>
-      <Card className="p-3">
-        <div className="flex flex-wrap gap-2">
+      <Card className="p-2.5 sm:p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Select
             value={type}
             onChange={(event) => {
@@ -290,7 +297,7 @@ function LedgerPanel() {
               setPage(1)
             }}
             aria-label="Movement type"
-            className="w-[200px]"
+            className="w-full sm:w-[200px]"
           >
             {MOVEMENT_TYPES.map((option) => (
               <option key={option.value} value={option.value}>
@@ -306,7 +313,7 @@ function LedgerPanel() {
               setPage(1)
             }}
             aria-label="Warehouse"
-            className="w-[200px]"
+            className="w-full sm:w-[200px]"
           >
             <option value="">All warehouses</option>
             {warehouses?.map((warehouse) => (
@@ -472,10 +479,10 @@ function ReconcilePanel() {
       ) : isFetching && !data ? (
         <TableSkeleton rows={4} cols={4} />
       ) : data ? (
-        <div className="p-5">
+        <div className="p-4 sm:p-5">
           <div
             className={cn(
-              'flex items-start gap-3 rounded-lg border p-4',
+              'flex items-start gap-3 rounded-lg border p-3 sm:p-4',
               data.balanced
                 ? 'border-good-500/25 bg-good-50'
                 : 'border-critical-500/25 bg-critical-50',
@@ -552,7 +559,7 @@ function ReconcilePanel() {
             </div>
           )}
 
-          <p className="mt-3 flex items-center gap-1.5 text-[11.5px] text-ink-400">
+          <p className="mt-3 flex flex-wrap items-center gap-1.5 text-[11.5px] leading-relaxed text-ink-400">
             <Badge tone="neutral">Admin only</Badge>
             In production this would run nightly and page on-call if it ever reported drift.
           </p>

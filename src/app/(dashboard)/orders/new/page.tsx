@@ -177,9 +177,9 @@ export default function NewOrderPage() {
   const products = productsPage?.items ?? []
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/orders"
             className="rounded-lg p-2 text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-900"
@@ -187,9 +187,9 @@ export default function NewOrderPage() {
           >
             <ArrowLeft className="size-4" />
           </Link>
-          <div>
-            <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">New order</h1>
-            <p className="mt-0.5 flex items-center gap-2 text-sm text-ink-500">
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">New order</h1>
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-ink-500 sm:text-sm">
               Stock is decremented atomically when you submit
               <span aria-hidden>·</span>
               <LiveDot label="live availability" />
@@ -198,11 +198,11 @@ export default function NewOrderPage() {
         </div>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_400px]">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* ---------------- Catalogue ---------------- */}
-        <div className="space-y-4">
-          <Card className="p-3">
-            <div className="flex flex-wrap gap-2">
+        <div className="min-w-0 space-y-4">
+          <Card className="p-2.5 sm:p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Select
                 value={cart.warehouseId ?? ''}
                 onChange={(event) => {
@@ -217,7 +217,7 @@ export default function NewOrderPage() {
                 }}
                 error={formErrors.warehouse}
                 aria-label="Fulfilment warehouse"
-                className="w-[220px]"
+                className="w-full sm:w-[220px]"
                 disabled={warehousesLoading}
               >
                 <option value="">Select warehouse…</option>
@@ -229,7 +229,7 @@ export default function NewOrderPage() {
                 ))}
               </Select>
 
-              <div className="min-w-[200px] flex-1">
+              <div className="w-full sm:min-w-[200px] sm:flex-1">
                 <Input
                   placeholder="Search the catalogue…"
                   value={search}
@@ -265,7 +265,7 @@ export default function NewOrderPage() {
                 description="Try a different search term."
               />
             ) : (
-              <div className="grid max-h-[560px] gap-3 overflow-y-auto p-4 sm:grid-cols-2">
+              <div className="grid max-h-[65vh] gap-3 overflow-y-auto overscroll-contain p-3 sm:max-h-[560px] sm:grid-cols-2 sm:p-4 2xl:grid-cols-3">
                 {products.map((product) => {
                   const available = availableByProduct.get(product.id) ?? 0
                   const inCart = cart.lineFor(product.id)
@@ -352,7 +352,7 @@ export default function NewOrderPage() {
         </div>
 
         {/* ---------------- Basket ---------------- */}
-        <div className="space-y-4 lg:sticky lg:top-[84px] lg:self-start">
+        <div className="min-w-0 space-y-4 lg:sticky lg:top-[84px] lg:self-start">
           <Card className="overflow-hidden">
             <CardHeader
               title="Basket"
@@ -375,7 +375,7 @@ export default function NewOrderPage() {
                 className="py-10"
               />
             ) : (
-              <ul data-testid="basket" className="max-h-[280px] divide-y divide-ink-100 overflow-y-auto">
+              <ul data-testid="basket" className="max-h-[320px] divide-y divide-ink-100 overflow-y-auto overscroll-contain sm:max-h-[280px]">
                 {cart.lines.map((line) => {
                   const available = availableByProduct.get(line.productId)
                   const over = available !== undefined && line.quantity > available

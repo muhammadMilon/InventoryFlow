@@ -118,11 +118,11 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Products</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-ink-500">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">Products</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-ink-500 sm:text-sm">
             {data ? `${number(data.pagination.total)} products in the catalogue` : 'Loading catalogue…'}
             <span aria-hidden>·</span>
             <LiveDot label="live stock" active={isFetching} />
@@ -130,16 +130,20 @@ export default function ProductsPage() {
         </div>
 
         {isAdmin && (
-          <Button leftIcon={<Plus className="size-4" />} onClick={() => setCreateOpen(true)}>
+          <Button
+            leftIcon={<Plus className="size-4" />}
+            onClick={() => setCreateOpen(true)}
+            className="w-full justify-center sm:w-auto"
+          >
             New product
           </Button>
         )}
       </div>
 
       {/* ---- Filter bar: one row, above the table ---- */}
-      <Card className="p-3">
-        <div className="flex flex-wrap items-start gap-2">
-          <div className="min-w-[200px] flex-1">
+      <Card className="p-2.5 sm:p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
+          <div className="w-full sm:min-w-[200px] sm:flex-1">
             <Input
               placeholder="Search name, SKU or description…"
               value={search}
@@ -168,7 +172,7 @@ export default function ProductsPage() {
               setPage(1)
             }}
             aria-label="Filter by warehouse"
-            className="w-[190px]"
+            className="w-full sm:w-[190px]"
           >
             <option value="">All warehouses</option>
             {warehouses?.map((warehouse) => (
@@ -185,7 +189,7 @@ export default function ProductsPage() {
               setPage(1)
             }}
             aria-label="Filter by category"
-            className="w-[170px]"
+            className="w-full sm:w-[170px]"
           >
             <option value="">All categories</option>
             {categories?.map((category) => (
@@ -203,7 +207,7 @@ export default function ProductsPage() {
             }}
             aria-pressed={lowStockOnly}
             className={
-              'inline-flex h-10 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-colors ' +
+              'inline-flex h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-colors sm:w-auto ' +
               (lowStockOnly
                 ? 'border-serious-500/30 bg-serious-50 text-serious-700'
                 : 'border-ink-300 bg-white text-ink-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700')
@@ -214,7 +218,13 @@ export default function ProductsPage() {
           </button>
 
           {activeFilterCount > 0 && (
-            <Button variant="ghost" size="md" onClick={clearFilters} leftIcon={<X className="size-3.5" />}>
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={clearFilters}
+              leftIcon={<X className="size-3.5" />}
+              className="w-full justify-center sm:w-auto"
+            >
               Clear
             </Button>
           )}
@@ -341,7 +351,7 @@ export default function ProductsPage() {
                         </Td>
 
                         <Td align="right">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                             <Button
                               size="sm"
                               variant="subtle"

@@ -1,12 +1,17 @@
+'use client'
+
 import type { HTMLAttributes, ReactNode, ThHTMLAttributes, TdHTMLAttributes } from 'react'
 import { cn } from '@/lib/format'
+import { TableScroller } from './table-scroller'
 
 /**
  * Wide tables scroll inside their own container — the page body must never
- * scroll horizontally on a phone.
+ * scroll horizontally on a phone. `TableScroller` adds the rail above and below
+ * that makes the sideways scroll discoverable before you have scrolled past
+ * every row; see the note there for why the native scrollbar is not enough.
  */
-export function TableWrap({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn('w-full overflow-x-auto', className)} {...props} />
+export function TableWrap(props: HTMLAttributes<HTMLDivElement>) {
+  return <TableScroller {...props} />
 }
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
@@ -33,7 +38,7 @@ export function Th({ className, align = 'left', sortable, sorted, children, ...p
       scope="col"
       aria-sort={sorted ? (sorted === 'asc' ? 'ascending' : 'descending') : undefined}
       className={cn(
-        'whitespace-nowrap px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-ink-500',
+        'whitespace-nowrap px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-ink-500 sm:px-4',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         align === 'left' && 'text-left',
@@ -63,7 +68,7 @@ export function Td({ className, align = 'left', numeric, ...props }: TdProps) {
   return (
     <td
       className={cn(
-        'px-4 py-3 align-middle text-ink-700',
+        'px-3 py-3 align-middle text-ink-700 sm:px-4',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         numeric && 'tnum',
@@ -99,8 +104,8 @@ export function Pagination({
   const to = Math.min(page * pageSize, total)
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-100 px-5 py-3">
-      <p className="text-[13px] text-ink-500 tnum">
+    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-t border-ink-100 px-4 py-3 sm:px-5">
+      <p className="text-[12.5px] text-ink-500 tnum sm:text-[13px]">
         <span className="font-medium text-ink-700">
           {from}–{to}
         </span>{' '}
@@ -135,7 +140,7 @@ function PageButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="rounded-md border border-ink-200 bg-white px-2.5 py-1 text-[13px] font-medium text-ink-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-ink-200 disabled:hover:bg-white disabled:hover:text-ink-600"
+      className="rounded-md border border-ink-200 bg-white px-3 py-1.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-ink-200 disabled:hover:bg-white disabled:hover:text-ink-600"
     >
       {children}
     </button>

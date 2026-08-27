@@ -46,7 +46,7 @@ export function StatTile({
 }: StatTileProps) {
   if (loading) {
     return (
-      <div className={cn('rounded-[var(--radius-card)] border border-ink-200 bg-white p-4', className)}>
+      <div className={cn('rounded-[var(--radius-card)] border border-ink-200 bg-white p-3.5 sm:p-4', className)}>
         <div className="flex items-start justify-between">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="size-8 rounded-lg" />
@@ -62,12 +62,12 @@ export function StatTile({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-[var(--radius-card)] border border-ink-200 bg-white p-4 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-raised)]',
+        'group relative overflow-hidden rounded-[var(--radius-card)] border border-ink-200 bg-white p-3.5 shadow-[var(--shadow-card)] transition-shadow hover:shadow-[var(--shadow-raised)] sm:p-4',
         className,
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[12px] font-medium uppercase tracking-wide text-ink-500">{label}</p>
+        <p className="min-w-0 truncate text-[11.5px] font-medium uppercase tracking-wide text-ink-500 sm:text-[12px]">{label}</p>
         {icon && (
           <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-lg', TONE_RING[tone])}>
             {icon}
@@ -75,7 +75,7 @@ export function StatTile({
         )}
       </div>
 
-      <p className="mt-2.5 text-[26px] font-semibold leading-none tracking-[-0.03em] text-ink-900 tnum">
+      <p className="mt-2.5 text-[22px] font-semibold leading-none tracking-[-0.03em] text-ink-900 tnum sm:text-[26px]">
         {value}
       </p>
 

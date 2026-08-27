@@ -52,7 +52,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div className="lg:pl-[248px]">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1400px] px-3 py-4 sm:px-5 sm:py-6 lg:px-8 2xl:max-w-[1680px]">
+          {children}
+        </main>
       </div>
     </div>
   )

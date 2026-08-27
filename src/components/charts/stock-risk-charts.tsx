@@ -17,6 +17,7 @@ import {
   type TooltipProps,
 } from 'recharts'
 import { currency, number } from '@/lib/format'
+import { useIsMobile } from '@/lib/use-media-query'
 import type { LowStockAlert, ProductVelocity } from '@/types/api'
 import { AXIS, ChartEmpty, ChartFrame, ChartTooltip, CURSOR_BAR, GRID, SERIES, STATUS_COLORS } from './chart-kit'
 import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
@@ -58,6 +59,10 @@ export function DaysOfCoverChart({ data, height = 320 }: { data: LowStockAlert[]
     .slice(0, 10)
     .reverse()
 
+  // See the note in TopProductsChart: on a phone the label gutter has to give
+  // way, or there is no bar left to read.
+  const narrow = useIsMobile()
+
   return (
     <ChartFrame
       title="Days of cover"
@@ -74,7 +79,7 @@ export function DaysOfCoverChart({ data, height = 320 }: { data: LowStockAlert[]
       ) : (
         <div style={{ height }} className="px-2 pb-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 56, bottom: 4, left: 4 }}>
+            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: narrow ? 40 : 56, bottom: 4, left: 4 }}>
               <CartesianGrid {...GRID} horizontal={false} vertical />
               <XAxis
                 type="number"
@@ -86,8 +91,11 @@ export function DaysOfCoverChart({ data, height = 320 }: { data: LowStockAlert[]
                 type="category"
                 dataKey="label"
                 {...AXIS}
-                width={140}
-                tick={{ fontSize: 12, fill: 'var(--color-ink-600)' }}
+                width={narrow ? 92 : 140}
+                tick={{ fontSize: narrow ? 11 : 12, fill: 'var(--color-ink-600)' }}
+                tickFormatter={(value: string) =>
+                  narrow && value.length > 12 ? `${value.slice(0, 11)}…` : value
+                }
               />
 
               <ReferenceLine

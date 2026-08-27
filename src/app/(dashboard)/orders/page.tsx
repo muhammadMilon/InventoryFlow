@@ -62,25 +62,27 @@ export default function OrdersPage() {
   const updateStatus = useUpdateOrderStatus()
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold tracking-[-0.02em] text-ink-900">Orders</h1>
-          <p className="mt-1 flex items-center gap-2 text-sm text-ink-500">
+        <div className="min-w-0">
+          <h1 className="text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">Orders</h1>
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[13px] text-ink-500 sm:text-sm">
             {data ? `${number(data.pagination.total)} orders` : 'Loading orders…'}
             <span aria-hidden>·</span>
             <LiveDot label="auto-refreshing" active={isFetching} />
           </p>
         </div>
 
-        <Link href="/orders/new">
-          <Button leftIcon={<Plus className="size-4" />}>New order</Button>
+        <Link href="/orders/new" className="w-full sm:w-auto">
+          <Button leftIcon={<Plus className="size-4" />} className="w-full justify-center sm:w-auto">
+            New order
+          </Button>
         </Link>
       </div>
 
-      <Card className="p-3">
-        <div className="flex flex-wrap items-start gap-2">
-          <div className="min-w-[200px] flex-1">
+      <Card className="p-2.5 sm:p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
+          <div className="w-full sm:min-w-[200px] sm:flex-1">
             <Input
               placeholder="Search order number, customer name or email…"
               value={search}
@@ -109,7 +111,7 @@ export default function OrdersPage() {
               setPage(1)
             }}
             aria-label="Filter by status"
-            className="w-[170px]"
+            className="w-full sm:w-[170px]"
           >
             {STATUSES.map((option) => (
               <option key={option.value} value={option.value}>
@@ -125,7 +127,7 @@ export default function OrdersPage() {
               setPage(1)
             }}
             aria-label="Filter by warehouse"
-            className="w-[190px]"
+            className="w-full sm:w-[190px]"
           >
             <option value="">All warehouses</option>
             {warehouses?.map((warehouse) => (
@@ -227,7 +229,7 @@ export default function OrdersPage() {
                         </Td>
 
                         <Td align="right" onClick={(event) => event.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
                             {isAdmin && order.status === 'CONFIRMED' && !provisional && (
                               <Button
                                 size="sm"
@@ -375,7 +377,7 @@ function OrderDetailModal({ order, onClose }: { order: Order | null; onClose: ()
             </TableWrap>
           </div>
 
-          <div className="ml-auto w-full max-w-[260px] space-y-1.5 text-[13px]">
+          <div className="w-full space-y-1.5 text-[13px] sm:ml-auto sm:max-w-[260px]">
             <Row label="Subtotal" value={currency(order.subtotal, true)} />
             <Row label="VAT (5%)" value={currency(order.taxTotal, true)} />
             <div className="border-t border-ink-200 pt-1.5">

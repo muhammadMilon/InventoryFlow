@@ -51,20 +51,26 @@ export default function AiRestockPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-xl font-semibold tracking-[-0.02em] text-ink-900">
-            <Sparkles className="size-5 text-brand-500" />
+        <div className="min-w-0">
+          <h1 className="flex items-center gap-2 text-lg font-semibold tracking-[-0.02em] text-ink-900 sm:text-xl">
+            <Sparkles className="size-5 shrink-0 text-brand-500" />
             Restock intelligence
           </h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <p className="mt-1 text-[13px] text-ink-500 sm:text-sm">
             Sales velocity and days of cover, turned into a purchase plan.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <SegmentedControl value={days} onChange={setDays} options={WINDOWS} label="Analysis window" />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
+          <SegmentedControl
+            value={days}
+            onChange={setDays}
+            options={WINDOWS}
+            label="Analysis window"
+            className="w-full xs:w-auto xs:min-w-0 xs:flex-1 sm:flex-none"
+          />
           {isAdmin && (
             <Button
               variant="outline"
@@ -72,6 +78,7 @@ export default function AiRestockPage() {
               leftIcon={<RefreshCw className={cn('size-3.5', regenerate.isPending && 'animate-spin')} />}
               onClick={onRegenerate}
               loading={regenerate.isPending}
+              className="shrink-0"
             >
               Regenerate
             </Button>
@@ -80,7 +87,7 @@ export default function AiRestockPage() {
       </div>
 
       {/* ---- Provider strip ---- */}
-      <Card className="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3.5">
+      <Card className="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3.5 sm:px-5">
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -102,7 +109,7 @@ export default function AiRestockPage() {
           </div>
         </div>
 
-        <div className="h-8 w-px bg-ink-200" aria-hidden />
+        <div className="hidden h-8 w-px bg-ink-200 lg:block" aria-hidden />
 
         <div className="flex items-start gap-2">
           <ShieldCheck className="mt-0.5 size-4 shrink-0 text-good-500" aria-hidden />
@@ -114,7 +121,7 @@ export default function AiRestockPage() {
         </div>
 
         {report && (
-          <div className="ml-auto text-right">
+          <div className="lg:ml-auto lg:text-right">
             <p className="text-[11px] uppercase tracking-wide text-ink-400">Generated</p>
             <p className="text-[12.5px] font-medium text-ink-700">{relativeTime(report.generatedAt)}</p>
           </div>
@@ -142,7 +149,7 @@ export default function AiRestockPage() {
 
           {/* ---- Headline ---- */}
           <Card className="overflow-hidden">
-            <div className="bg-gradient-to-br from-brand-50 via-white to-white px-5 py-5">
+            <div className="bg-gradient-to-br from-brand-50 via-white to-white px-4 py-5 sm:px-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Badge tone={report.source === 'gemini' ? 'brand' : 'neutral'} icon={<Cpu className="size-3" />}>
@@ -153,13 +160,13 @@ export default function AiRestockPage() {
                 </div>
               </div>
 
-              <h2 className="mt-3 max-w-3xl text-[19px] font-semibold leading-snug tracking-[-0.02em] text-ink-900">
+              <h2 className="mt-3 max-w-3xl text-[17px] font-semibold leading-snug sm:text-[19px] tracking-[-0.02em] text-ink-900">
                 {report.headline}
               </h2>
 
               <p className="mt-2 max-w-3xl text-[13.5px] leading-relaxed text-ink-600">{report.summary}</p>
 
-              <div className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
+              <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 xs:flex xs:flex-wrap xs:gap-x-8">
                 {[
                   { label: 'SKUs to reorder', value: number(report.recommendations.length) },
                   { label: 'Units', value: number(report.totalSuggestedUnits) },
@@ -183,7 +190,7 @@ export default function AiRestockPage() {
             />
 
             {report.recommendations.length === 0 ? (
-              <div className="px-5 py-12 text-center">
+              <div className="px-4 py-12 text-center sm:px-5">
                 <p className="text-[15px] font-semibold text-ink-800">Nothing needs reordering</p>
                 <p className="mt-1 text-[13px] text-ink-500">
                   Every active SKU is above its reorder point with healthy cover.
@@ -192,7 +199,7 @@ export default function AiRestockPage() {
             ) : (
               <ul className="divide-y divide-ink-100">
                 {report.recommendations.map((line) => (
-                  <li key={line.sku} className="px-5 py-4 transition-colors hover:bg-brand-50/30">
+                  <li key={line.sku} className="px-4 py-4 transition-colors hover:bg-brand-50/30 sm:px-5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -231,14 +238,16 @@ export default function AiRestockPage() {
                         </div>
                       </div>
 
-                      <div className="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-right">
+                      <div className="flex w-full shrink-0 items-center justify-between gap-3 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 sm:w-auto sm:flex-col sm:items-end sm:gap-0 sm:text-right">
                         <p className="text-[10.5px] font-semibold uppercase tracking-wide text-brand-600">
                           Order
                         </p>
-                        <p className="text-[20px] font-semibold leading-tight text-brand-700 tnum">
-                          {number(line.suggestedQty)}
-                        </p>
-                        <p className="text-[11px] text-brand-600 tnum">{currency(line.estimatedCost)}</p>
+                        <div className="text-right">
+                          <p className="text-[20px] font-semibold leading-tight text-brand-700 tnum">
+                            {number(line.suggestedQty)}
+                          </p>
+                          <p className="text-[11px] text-brand-600 tnum">{currency(line.estimatedCost)}</p>
+                        </div>
                       </div>
                     </div>
                   </li>

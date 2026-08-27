@@ -182,9 +182,9 @@ export function ChartFrame({
 
   return (
     <Card className={cn('flex flex-col overflow-hidden', className)}>
-      <div className="flex flex-wrap items-start justify-between gap-3 px-5 pb-3 pt-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 px-4 pb-3 pt-4 sm:px-5">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink-900">{title}</h2>
+          <h2 className="text-[14.5px] font-semibold tracking-[-0.01em] text-ink-900 sm:text-[15px]">{title}</h2>
           {description && <p className="mt-0.5 text-[12px] leading-relaxed text-ink-500">{description}</p>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
@@ -204,13 +204,13 @@ export function ChartFrame({
         </div>
       </div>
 
-      {legend && legend.length > 1 && <ChartLegend items={legend} className="px-5 pb-2" />}
+      {legend && legend.length > 1 && <ChartLegend items={legend} className="px-4 pb-2 sm:px-5" />}
 
       <div className="min-w-0 flex-1">
-        {view === 'chart' ? children : <div className="max-h-[320px] overflow-auto">{table}</div>}
+        {view === 'chart' ? children : <div className="max-h-[360px] overflow-auto overscroll-contain">{table}</div>}
       </div>
 
-      {footer && <div className="border-t border-ink-100 px-5 py-2.5 text-[12px] text-ink-500">{footer}</div>}
+      {footer && <div className="border-t border-ink-100 px-4 py-2.5 text-[12px] leading-relaxed text-ink-500 sm:px-5">{footer}</div>}
     </Card>
   )
 }

@@ -71,6 +71,10 @@
   --color-ramp-500: #eb6834;
   --color-ramp-600: #b04318;
 
+  /* An extra-small breakpoint: 320–415px phones need different choices from
+     the 430–639px band, and Tailwind's scale starts at sm (640px). */
+  --breakpoint-xs: 26rem;
+
   --font-sans:
     var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
@@ -137,6 +141,27 @@
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-ink-400);
   }
+}
+
+/* --------------------------------------------------------------------------
+   Horizontal table scrollers
+   --------------------------------------------------------------------------
+   The native bar is hidden here and replaced by the rails `TableScroller`
+   draws above and below the table. Native horizontal scrollbars render only at
+   the bottom of the scroll box (a screen below the header on a long table) and
+   are overlay-only on touch platforms — invisible until you are already
+   dragging. The element stays a real scroll container: swipe, trackpad and
+   keyboard scrolling all still work.
+   -------------------------------------------------------------------------- */
+
+.table-scroll-x {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-x::-webkit-scrollbar {
+  display: none;
 }
 
 /* --------------------------------------------------------------------------

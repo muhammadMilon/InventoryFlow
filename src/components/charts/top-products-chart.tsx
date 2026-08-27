@@ -13,6 +13,7 @@ import {
   type TooltipProps,
 } from 'recharts'
 import { compactCurrency, currency, number } from '@/lib/format'
+import { useIsMobile } from '@/lib/use-media-query'
 import type { TopProduct } from '@/types/api'
 import { AXIS, ChartEmpty, ChartFrame, ChartTooltip, CURSOR_BAR, GRID, SERIES } from './chart-kit'
 import { Table, TableWrap, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
@@ -39,6 +40,12 @@ export function TopProductsChart({
 }) {
   const chartData = [...data].reverse() // Recharts renders the first item at the bottom.
 
+  // A 140px label gutter leaves a phone barely 100px of plot. Trade label
+  // length for bar length below sm, where the tooltip carries the full name.
+  const narrow = useIsMobile()
+  const labelWidth = narrow ? 92 : 140
+  const labelChars = narrow ? 12 : 20
+
   return (
     <ChartFrame
       title="Best sellers"
@@ -51,7 +58,7 @@ export function TopProductsChart({
       ) : (
         <div style={{ height }} className="px-2 pb-2">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: 64, bottom: 4, left: 4 }}>
+            <BarChart data={chartData} layout="vertical" margin={{ top: 4, right: narrow ? 44 : 64, bottom: 4, left: 4 }}>
               <CartesianGrid {...GRID} horizontal={false} vertical />
 
               <XAxis type="number" {...AXIS} tickFormatter={compactCurrency} />
@@ -59,9 +66,11 @@ export function TopProductsChart({
                 type="category"
                 dataKey="name"
                 {...AXIS}
-                width={140}
-                tick={{ fontSize: 12, fill: 'var(--color-ink-600)' }}
-                tickFormatter={(value: string) => (value.length > 20 ? `${value.slice(0, 19)}…` : value)}
+                width={labelWidth}
+                tick={{ fontSize: narrow ? 11 : 12, fill: 'var(--color-ink-600)' }}
+                tickFormatter={(value: string) =>
+                  value.length > labelChars ? `${value.slice(0, labelChars - 1)}…` : value
+                }
               />
 
               <Tooltip

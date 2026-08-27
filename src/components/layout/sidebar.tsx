@@ -61,7 +61,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       {/* Mobile scrim */}
       <div
         className={cn(
-          'fixed inset-0 z-30 bg-ink-900/30 transition-opacity lg:hidden',
+          'fixed inset-0 z-30 bg-ink-900/40 backdrop-blur-[1px] transition-opacity lg:hidden',
           open ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={onClose}
@@ -70,12 +70,12 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col border-r border-ink-200 bg-white transition-transform duration-200 lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-40 flex w-[min(17rem,85vw)] flex-col border-r border-ink-200 bg-white transition-transform duration-200 lg:w-[248px] lg:translate-x-0',
           open ? 'translate-x-0' : '-translate-x-full',
         )}
         aria-label="Main navigation"
       >
-        <div className="flex h-16 items-center justify-between border-b border-ink-100 px-4">
+        <div className="flex h-14 items-center justify-between border-b border-ink-100 px-4 sm:h-16">
           <Link href="/dashboard" onClick={onClose} className="rounded-lg">
             <Wordmark />
           </Link>
@@ -89,7 +89,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           </button>
         </div>
 
-        <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+        <nav className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-3 py-4">
           {NAV.map((group) => {
             const visible = group.items.filter((item) => !item.roles || (role && item.roles.includes(role)))
             if (visible.length === 0) return null
@@ -111,7 +111,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                           onClick={onClose}
                           aria-current={active ? 'page' : undefined}
                           className={cn(
-                            'group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-medium transition-colors',
+                            'group flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[13.5px] font-medium transition-colors sm:py-2',
                             active
                               ? 'bg-brand-50 text-brand-700'
                               : 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
@@ -137,7 +137,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
           })}
         </nav>
 
-        <div className="border-t border-ink-100 p-3">
+        <div className="border-t border-ink-100 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <div className="rounded-lg bg-gradient-to-br from-brand-50 to-white p-3 ring-1 ring-brand-100">
             <p className="text-[12px] font-semibold text-ink-900">Ledger reconciled</p>
             <p className="mt-0.5 text-[11px] leading-relaxed text-ink-500">

@@ -89,11 +89,11 @@ export function Modal({ open, onClose, title, description, children, footer, siz
         aria-labelledby="modal-title"
         tabIndex={-1}
         className={cn(
-          'animate-fade-rise relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-[var(--shadow-pop)] sm:rounded-[var(--radius-card)]',
+          'animate-fade-rise relative flex max-h-[92dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-[var(--shadow-pop)] sm:max-h-[90dvh] sm:rounded-[var(--radius-card)]',
           SIZES[size],
         )}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-ink-100 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 border-b border-ink-100 px-4 py-3.5 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <h2 id="modal-title" className="text-base font-semibold tracking-[-0.01em] text-ink-900">
               {title}
@@ -111,10 +111,10 @@ export function Modal({ open, onClose, title, description, children, footer, siz
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">{children}</div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-2 border-t border-ink-100 bg-ink-50/60 px-5 py-3">
+          <div className="flex items-center justify-end gap-2 border-t border-ink-100 bg-ink-50/60 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 sm:pb-3">
             {footer}
           </div>
         )}

@@ -19,11 +19,11 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
     <div className="divide-y divide-ink-100" aria-busy>
       <span className="sr-only">Loading…</span>
       {Array.from({ length: rows }).map((_, rowIndex) => (
-        <div key={rowIndex} className="flex items-center gap-4 px-5 py-3.5">
+        <div key={rowIndex} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
           {Array.from({ length: cols }).map((__, colIndex) => (
             <Skeleton
               key={colIndex}
-              className={cn('h-4', colIndex === 0 ? 'w-1/3' : 'flex-1', colIndex > 2 && 'hidden sm:block')}
+              className={cn('h-4', colIndex === 0 ? 'w-1/3' : 'flex-1', colIndex > 1 && 'hidden xs:block', colIndex > 2 && 'hidden sm:block')}
             />
           ))}
         </div>
@@ -34,7 +34,7 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
 
 export function ChartSkeleton({ height = 260 }: { height?: number }) {
   return (
-    <div className="flex flex-col justify-end gap-2 px-5 py-4" style={{ height }} aria-busy>
+    <div className="flex flex-col justify-end gap-2 px-4 py-4 sm:px-5" style={{ height }} aria-busy>
       <span className="sr-only">Loading chart…</span>
       <div className="flex flex-1 items-end gap-2">
         {[62, 84, 48, 96, 71, 58, 88, 44, 78, 66, 91, 53].map((value, index) => (
@@ -60,7 +60,7 @@ export function EmptyState({
   className?: string
 }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)}>
+    <div className={cn('flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6 sm:py-14', className)}>
       <span className="mb-3 flex size-12 items-center justify-center rounded-full bg-ink-100 text-ink-400">
         {icon ?? <Inbox className="size-5" />}
       </span>
@@ -119,7 +119,7 @@ export function ErrorState({
   }
 
   return (
-    <div className={cn('flex flex-col items-center justify-center px-6 py-14 text-center', className)} role="alert">
+    <div className={cn('flex flex-col items-center justify-center px-5 py-12 text-center sm:px-6 sm:py-14', className)} role="alert">
       <span className="mb-3 flex size-12 items-center justify-center rounded-full bg-critical-50 text-critical-700">
         {icon}
       </span>

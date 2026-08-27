@@ -97,13 +97,13 @@ export function LoginForm() {
   }
 
   return (
-    <main className="grid min-h-dvh lg:grid-cols-[1.05fr_1fr]">
+    <main className="grid min-h-dvh grid-cols-1 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       {/* ---- Form ---- */}
-      <div className="flex items-center justify-center px-5 py-10 sm:px-10">
+      <div className="flex min-w-0 items-center justify-center px-4 py-8 xs:px-5 sm:px-10 sm:py-10">
         <div className="w-full max-w-[400px]">
           <Wordmark className="mb-9" />
 
-          <h1 className="text-[26px] font-semibold tracking-[-0.03em] text-ink-900">Sign in</h1>
+          <h1 className="text-[24px] font-semibold tracking-[-0.03em] text-ink-900 sm:text-[26px]">Sign in</h1>
           <p className="mt-1.5 text-sm text-ink-500">
             Access the inventory, order and stock-ledger console.
           </p>
@@ -181,7 +181,7 @@ export function LoginForm() {
                     <ShieldCheck className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-baseline gap-2">
+                    <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                       <span className="text-[13px] font-semibold text-ink-900">{account.role}</span>
                       <span className="truncate font-mono text-[11px] text-ink-500">{account.email}</span>
                     </span>
