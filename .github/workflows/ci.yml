@@ -1,0 +1,130 @@
+name: Web CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+        env:
+          # The build only needs the API URL to be *defined*; nothing is fetched
+          # at build time, so a placeholder is correct here.
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+
+  # End-to-end runs against a live API and database, so it only fires when the
+  # secrets exist. Forks get the quality job and nothing that needs credentials.
+  e2e:
+    name: Playwright
+    runs-on: ubuntu-latest
+    needs: quality
+    if: github.event_name == 'push' && github.repository_owner != ''
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inventoryflow_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check out the API repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.API_REPOSITORY }}
+          path: backend
+          # Only needed if the API repo is private.
+          token: ${{ secrets.API_REPO_TOKEN || github.token }}
+        continue-on-error: true
+
+      - name: Skip when the API repository is unavailable
+        id: guard
+        run: |
+          if [ -f backend/package.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "API repository not checked out — skipping e2e."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        if: steps.guard.outputs.ready == 'true'
+        run: |
+          npm ci
+          npm --prefix backend ci
+
+      - name: Prepare the database
+        if: steps.guard.outputs.ready == 'true'
+        run: |
+          npm --prefix backend run db:generate
+          npm --prefix backend exec prisma migrate deploy
+          npm --prefix backend run db:seed
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
+          JWT_ACCESS_SECRET: ci-access-secret-that-is-definitely-long-enough-32
+          JWT_REFRESH_SECRET: ci-refresh-secret-that-is-definitely-long-enough-32
+
+      - name: Install Playwright browsers
+        if: steps.guard.outputs.ready == 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Run end-to-end tests
+        if: steps.guard.outputs.ready == 'true'
+        run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
+          DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inventoryflow_e2e
+          JWT_ACCESS_SECRET: ci-access-secret-that-is-definitely-long-enough-32
+          JWT_REFRESH_SECRET: ci-refresh-secret-that-is-definitely-long-enough-32
+          CORS_ORIGINS: http://localhost:3000
+          NEXT_PUBLIC_API_URL: http://localhost:4000/api/v1
+
+      - name: Upload the Playwright report
+        if: always() && steps.guard.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

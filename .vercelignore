@@ -1,0 +1,8 @@
+backend/
+tests/
+docs/
+test-results/
+playwright-report/
+scripts/
+*.md
+!README.md
