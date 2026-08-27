@@ -69,10 +69,13 @@ jobs:
           node-version: 22
           cache: npm
 
+      # An unset `vars.API_REPOSITORY` makes checkout fall back to THIS repo, so
+      # `backend/` silently fills with a copy of the frontend. Name the API repo
+      # explicitly and let the variable override it.
       - name: Check out the API repository
         uses: actions/checkout@v5
         with:
-          repository: ${{ vars.API_REPOSITORY }}
+          repository: ${{ vars.API_REPOSITORY || format('{0}/InventoryFlow-backend', github.repository_owner) }}
           path: backend
           # Only needed if the API repo is private.
           token: ${{ secrets.API_REPO_TOKEN || github.token }}
@@ -81,7 +84,9 @@ jobs:
       - name: Skip when the API repository is unavailable
         id: guard
         run: |
-          if [ -f backend/package.json ]; then
+          # Test for a file only the API has: a bare package.json check also
+          # passes on a stray checkout of the web app itself.
+          if [ -f backend/prisma/schema.prisma ] && grep -q '"name": "inventoryflow-api"' backend/package.json; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "API repository not checked out — skipping e2e."
