@@ -1,6 +1,28 @@
 import type { ApiErrorBody, ErrorCode, LoginResponse } from '@/types/api'
 
-const BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1').replace(/\/$/, '')
+const DEFAULT_API_URL = 'http://localhost:4000/api/v1'
+
+/**
+ * Resolve the API base URL.
+ *
+ * The emptiness check matters more than it looks. `NEXT_PUBLIC_*` values are
+ * inlined at build time, so a variable that is *defined but blank* in the
+ * hosting dashboard compiles to `''` — and `''` survives `??`, because it is
+ * neither null nor undefined. The base URL then becomes the empty string, every
+ * call resolves relative to the web app's own origin (`/auth/login` instead of
+ * `https://api.example.com/api/v1/auth/login`), and the app silently talks to
+ * itself: the deploy looks healthy and every request returns the 404 HTML page.
+ *
+ * Treating blank as unset turns that into an honest connection error naming the
+ * variable to fix.
+ */
+function resolveBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.trim()
+  if (!configured) return DEFAULT_API_URL
+  return configured.replace(/\/+$/, '')
+}
+
+const BASE_URL = resolveBaseUrl()
 
 /**
  * A typed error the whole UI can branch on.
@@ -157,6 +179,22 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   const text = await response.text()
   const payload: unknown = text ? safeParse(text) : null
 
+  // Every API response is JSON. Markup here means the request never reached the
+  // API at all — it was answered by whatever is serving the URL we aimed at,
+  // usually the web app's own 404 page after a blank or wrong
+  // NEXT_PUBLIC_API_URL. Naming that beats rendering a slice of HTML into an
+  // error banner, which is what this used to do.
+  if (payload === NOT_JSON) {
+    throw new ApiError(
+      response.status,
+      'NETWORK_ERROR',
+      `The API returned ${response.headers.get('content-type') ?? 'a non-JSON response'} instead of JSON. ` +
+        `Check that NEXT_PUBLIC_API_URL points at the API base URL (it is currently "${BASE_URL}").`,
+      undefined,
+      response.headers.get('x-request-id') ?? undefined,
+    )
+  }
+
   if (!response.ok) {
     const errorBody = payload as ApiErrorBody | null
     throw new ApiError(
@@ -172,11 +210,14 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
   return (envelope?.data ?? (payload as T)) as T
 }
 
-function safeParse(text: string): unknown {
+/** Distinguishes "the body was not JSON" from "the body was the JSON value null". */
+const NOT_JSON = Symbol('not-json')
+
+function safeParse(text: string): unknown | typeof NOT_JSON {
   try {
     return JSON.parse(text)
   } catch {
-    return { ok: false, error: { code: 'INTERNAL_ERROR', message: text.slice(0, 300) } }
+    return NOT_JSON
   }
 }
 

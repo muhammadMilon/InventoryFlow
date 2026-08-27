@@ -33,7 +33,7 @@ Do them in that order. The API needs the database URL, and the web app needs the
 
 ## 2. Render — the API
 
-The API is its own repository. Push `backend/` to it first (see [Two repositories](#two-repositories) below).
+The API is its own repository — [muhammadMilon/InventoryFlow-backend](https://github.com/muhammadMilon/InventoryFlow-backend). Point Render at that repository (see [Two repositories](#two-repositories) below).
 
 ### Option A — blueprint (recommended)
 
@@ -45,7 +45,7 @@ The API is its own repository. Push `backend/` to it first (see [Two repositorie
    |---|---|
    | `DATABASE_URL` | Neon **pooled** URL |
    | `DIRECT_URL` | Neon **direct** URL |
-   | `CORS_ORIGINS` | Your Vercel domain, e.g. `https://inventoryflow.vercel.app` |
+   | `CORS_ORIGINS` | Your Vercel domain, e.g. `https://inventory-flow-xi.vercel.app` |
    | `GEMINI_API_KEY` | From <https://aistudio.google.com/app/apikey> — optional |
 
    `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` use `generateValue: true`, so Render creates them and they never exist outside it.
@@ -65,7 +65,7 @@ Root directory `.`, runtime Node, health check path `/health`, then the same bui
 ### Verify
 
 ```bash
-curl https://your-api.onrender.com/health
+curl https://inventoryflow-api-exrk.onrender.com/health
 ```
 
 ```json
@@ -83,7 +83,7 @@ curl https://your-api.onrender.com/health
 
    | Variable | Value |
    |---|---|
-   | `NEXT_PUBLIC_API_URL` | `https://your-api.onrender.com/api/v1` |
+   | `NEXT_PUBLIC_API_URL` | `https://inventoryflow-api-exrk.onrender.com/api/v1` |
 
    Note the `/api/v1` suffix — the client appends paths directly to it.
 
@@ -109,38 +109,23 @@ Locally, `localhost:3000` and `localhost:4000` differ only by port, which is *sa
 The other half is CORS. The API sends `credentials: true`, and the spec forbids pairing that with `Access-Control-Allow-Origin: *`. `CORS_ORIGINS` must therefore list exact origins:
 
 ```
-CORS_ORIGINS=https://inventoryflow.vercel.app,https://inventoryflow-git-main-you.vercel.app
+CORS_ORIGINS=https://inventory-flow-xi.vercel.app,https://*.vercel.app
 ```
 
-Add preview domains explicitly if previews need to reach the live API.
+The second entry is a pattern, not a response: `*` matches exactly one subdomain label, which covers Vercel's per-branch preview URLs without redeploying the API for each one. The API still echoes back a single exact origin, because `Access-Control-Allow-Origin: *` is illegal alongside `credentials: true`. Drop the wildcard if you would rather previews could not reach the live API.
 
 ---
 
 ## Two repositories
 
-The API deploys independently, so it lives in its own repository. From the monorepo working copy:
+The two halves are released independently, so each has its own repository and its own deploy target:
 
-```bash
-# --- API repo ---
-cd backend
-git init
-git add .
-git commit -m "feat: InventoryFlow API"
-git branch -M main
-git remote add origin https://github.com/muhammadMilon/InventoryFlow-api.git
-git push -u origin main
+| Repository | Contents | Deploys to |
+|---|---|---|
+| [muhammadMilon/InventoryFlow](https://github.com/muhammadMilon/InventoryFlow) | The Next.js web app | Vercel |
+| [muhammadMilon/InventoryFlow-backend](https://github.com/muhammadMilon/InventoryFlow-backend) | The Express + Prisma API, `render.yaml`, `Dockerfile` | Render |
 
-# --- Web repo (repository root; backend/ is gitignored here) ---
-cd ..
-git init
-git add .
-git commit -m "feat: InventoryFlow web app"
-git branch -M main
-git remote add origin https://github.com/muhammadMilon/InventoryFlow.git
-git push -u origin main
-```
-
-The root `.gitignore` excludes `backend/`, so the two histories never overlap even though the folders are nested during development.
+Each platform watches its own repository, so a change to a chart does not redeploy the API and a migration does not rebuild the frontend. For local full-stack work the API is cloned into `backend/`, where the root scripts expect it — see [Quick start](../README.md#quick-start).
 
 ---
 
@@ -161,10 +146,10 @@ The root `.gitignore` excludes `backend/`, so the two histories never overlap ev
 | `BCRYPT_ROUNDS` | | `12` | |
 | `COOKIE_SAMESITE` | | `lax` | **`none`** cross-site |
 | `COOKIE_SECURE` | | `false` | **`true`** cross-site |
-| `CORS_ORIGINS` | ✓ | `http://localhost:3000` | Comma-separated, exact |
+| `CORS_ORIGINS` | ✓ | `http://localhost:3000` | Comma-separated. Exact origins, or `https://*.vercel.app` to match one subdomain label |
 | `RATE_LIMIT_*` | | see `.env.example` | Six knobs |
 | `GEMINI_API_KEY` | | empty | Empty → heuristic fallback |
-| `GEMINI_MODEL` | | `gemini-2.0-flash` | |
+| `GEMINI_MODEL` | | `gemini-3.6-flash` | Override per environment |
 | `AI_CACHE_TTL_SECONDS` | | `300` | |
 
 The API validates all of this with Zod on boot and exits with a readable list if anything is wrong.
@@ -173,7 +158,7 @@ The API validates all of this with Zod on boot and exits with a readable list if
 
 | Variable | Required | Note |
 |---|:---:|---|
-| `NEXT_PUBLIC_API_URL` | ✓ | Must include `/api/v1` |
+| `NEXT_PUBLIC_API_URL` | ✓ | Absolute URL including `/api/v1`. Must not be blank — see [Troubleshooting](#troubleshooting). Inlined at build time, so changing it needs a redeploy |
 | `NEXT_PUBLIC_APP_NAME` | | Cosmetic |
 
 ---
@@ -182,6 +167,8 @@ The API validates all of this with Zod on boot and exits with a readable list if
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| Sign-in fails and the error banner shows **raw HTML** starting `<!DOCTYPE html>` | `NEXT_PUBLIC_API_URL` is blank or wrong, so the app is calling its own Vercel origin and getting the Next.js 404 page back | Set it to the full API base URL including `/api/v1`, then **redeploy** — the value is inlined at build time, so a restart is not enough |
+| Sign-in fails with `500 INTERNAL_ERROR`, and `curl` against the same endpoint works | The browser sends an `Origin` header that is not in `CORS_ORIGINS`; `curl` sends none | Add the exact origin to `CORS_ORIGINS`. The API logs `blocked by CORS` with the origin string it was given |
 | Signed in, then immediately signed out on reload | Refresh cookie dropped | `COOKIE_SAMESITE=none` **and** `COOKIE_SECURE=true` |
 | Browser console: blocked by CORS | Vercel domain not allow-listed | Add it to `CORS_ORIGINS`, exactly, no trailing slash |
 | "API offline" badge in the top bar | Render free instance cold-starting | Wait ~30s, or use a paid instance |

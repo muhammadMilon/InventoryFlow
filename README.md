@@ -2,21 +2,20 @@
 
 A multi-warehouse inventory and order management module built around a **ledger-backed stock model**: every unit that moves leaves an append-only record, and the current stock level is always reconcilable against that history.
 
-> **Repositories** — the frontend and the API deploy independently and live in separate repositories:
->
-> | Part | Repo | Stack | Hosted on |
-> |---|---|---|---|
-> | Web app | [muhammadMilon/InventoryFlow](https://github.com/muhammadMilon/InventoryFlow) (this one) | Next.js 15 · React 19 · TypeScript · Tailwind v4 · TanStack Query · Zustand · Recharts | Vercel |
-> | API | [muhammadMilon/InventoryFlow-api](https://github.com/muhammadMilon/InventoryFlow-api) | Node · Express · TypeScript · **Prisma** · PostgreSQL (Neon) · Zod · JWT | Render |
->
-> This repository contains the web app only. For local development the API is cloned into `backend/` — git-ignored here — and the root scripts (`dev:api`, `db:*`, `test:api`) proxy into it.
+### ▶ [Open the live app](https://inventory-flow-xi.vercel.app) · [API health check](https://inventoryflow-api-exrk.onrender.com/health)
+
+Sign in with either [seeded demo account](#demo-accounts) — the login page fills them in with one click.
+
+> **First load may be slow.** The API runs on Render's free tier, which sleeps after ~15 minutes of inactivity. The request that wakes it can take up to 50 seconds; everything after that is fast. If the first sign-in appears to hang, that is the cold start, not a failure. Opening the [health check](https://inventoryflow-api-exrk.onrender.com/health) first is a good way to wake it.
 
 ---
 
 ## Table of contents
 
+- [Repositories](#repositories)
 - [What this is](#what-this-is)
 - [Quick start](#quick-start)
+- [Configuration](#configuration)
 - [The three problems worth reading about](#the-three-problems-worth-reading-about)
 - [Architecture](#architecture)
 - [Data model](#data-model)
@@ -30,23 +29,38 @@ A multi-warehouse inventory and order management module built around a **ledger-
 
 ---
 
+## Repositories
+
+The web app and the API are two independent deployables, in two repositories, released on their own cadence.
+
+| Part | Repository | Live | Stack | Hosted on |
+|---|---|---|---|---|
+| Web app | [muhammadMilon/InventoryFlow](https://github.com/muhammadMilon/InventoryFlow) *(this one)* | [inventory-flow-xi.vercel.app](https://inventory-flow-xi.vercel.app) | Next.js 15 · React 19 · TypeScript · Tailwind v4 · TanStack Query · Zustand · Recharts | Vercel |
+| API | [muhammadMilon/InventoryFlow-backend](https://github.com/muhammadMilon/InventoryFlow-backend) | [inventoryflow-api-exrk.onrender.com](https://inventoryflow-api-exrk.onrender.com/health) | Node · Express · TypeScript · **Prisma** · PostgreSQL (Neon) · Zod · JWT | Render |
+
+They are split because they scale and fail differently: the web app is static output on a CDN, the API is a stateful process holding a database connection pool. Coupling them into one deployment would mean redeploying the API to change a chart colour.
+
+This repository contains the web app only. For local full-stack development the API is cloned into `backend/`, and the root scripts (`dev:api`, `db:*`, `test:api`) proxy into it — see [Quick start](#quick-start).
+
+---
+
 ## What this is
 
 | Capability | Where it lives |
 |---|---|
-| Normalised schema: `Product`, `Warehouse`, `StockLevel`, `StockMovement`, `Order`, `OrderItem` | [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/prisma/schema.prisma) |
-| Race-safe order placement — two orders for the last unit cannot both succeed | [`src/modules/stock/stock.service.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/modules/stock/stock.service.ts) |
+| Normalised schema: `Product`, `Warehouse`, `StockLevel`, `StockMovement`, `Order`, `OrderItem` | [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/prisma/schema.prisma) |
+| Race-safe order placement — two orders for the last unit cannot both succeed | [`src/modules/stock/stock.service.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/modules/stock/stock.service.ts) |
 | Every stock change written to an append-only ledger, with the resulting balance | same |
-| Zod validation on every request body, query and param | [`src/middleware/validate.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/validate.ts) |
-| JWT auth with refresh-token rotation, plus `ADMIN`/`STAFF` RBAC | [`src/middleware/auth.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/auth.ts) |
-| Idempotent order submission — double-click safe | [`src/middleware/idempotency.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/idempotency.ts) |
-| Rate limiting on login, orders and the AI endpoint | [`src/middleware/rate-limit.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/middleware/rate-limit.ts) |
-| Audit logging of admin stock adjustments | [`src/lib/audit.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/src/lib/audit.ts) |
+| Zod validation on every request body, query and param | [`src/middleware/validate.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/middleware/validate.ts) |
+| JWT auth with refresh-token rotation, plus `ADMIN`/`STAFF` RBAC | [`src/middleware/auth.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/middleware/auth.ts) |
+| Idempotent order submission — double-click safe | [`src/middleware/idempotency.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/middleware/idempotency.ts) |
+| Rate limiting on login, orders and the AI endpoint | [`src/middleware/rate-limit.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/middleware/rate-limit.ts) |
+| Audit logging of admin stock adjustments | [`src/lib/audit.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/lib/audit.ts) |
 | Live-ish product list (3s polling via TanStack Query) | [`src/lib/queries.ts`](src/lib/queries.ts) |
 | Optimistic order creation with rollback | [`src/lib/use-place-order.ts`](src/lib/use-place-order.ts) |
 | Eight dashboard visualisations + low-stock alerting | [`src/components/charts/`](src/components/charts/) |
-| Gemini-written restock brief with a deterministic fallback | [`src/modules/ai/`](https://github.com/muhammadMilon/InventoryFlow-api/tree/main/src/modules/ai) |
-| Jest + Supertest integration tests, Playwright end-to-end tests | API [`tests/`](https://github.com/muhammadMilon/InventoryFlow-api/tree/main/tests), web [`tests/`](tests/) |
+| Gemini-written restock brief with a deterministic fallback | [`src/modules/ai/`](https://github.com/muhammadMilon/InventoryFlow-backend/tree/main/src/modules/ai) |
+| Jest + Supertest integration tests, Playwright end-to-end tests | API [`tests/`](https://github.com/muhammadMilon/InventoryFlow-backend/tree/main/tests), web [`tests/`](tests/) |
 
 ### Demo accounts
 
@@ -64,11 +78,11 @@ Both are seeded, and the login page fills them in with one click.
 **Prerequisites:** Node 20+, and a PostgreSQL database. [Neon](https://neon.tech) free tier is what this was built against.
 
 ```bash
-# 1. Clone both repositories — the API goes into backend/, where the root
-#    scripts expect it (that path is git-ignored by the web app repo)
+# 1. Clone both repositories — the API goes into backend/, which is where
+#    the root scripts (dev:api, db:*, test:api) expect to find it
 git clone https://github.com/muhammadMilon/InventoryFlow.git inventoryflow
 cd inventoryflow
-git clone https://github.com/muhammadMilon/InventoryFlow-api.git backend
+git clone https://github.com/muhammadMilon/InventoryFlow-backend.git backend
 
 # 2. Install both halves
 npm run setup                 # npm install here + in backend/
@@ -102,6 +116,7 @@ Open <http://localhost:3000> and sign in with either demo account.
 | `npm run test:api` | Jest + Supertest against the database |
 | `npm run test:e2e` | Playwright (boots both servers itself) |
 | `npm run typecheck` / `npm run lint` | Static checks |
+| `npm run icons` | Regenerate `favicon.ico` + `apple-icon.png` from `src/app/icon.svg` |
 
 ### About the seed
 
@@ -116,6 +131,37 @@ StockLevel.quantity === SUM(StockMovement.quantityDelta)
 holds by construction — `GET /api/v1/stock/reconcile` returns `balanced: true` on a freshly seeded database, and the seed script asserts it before exiting.
 
 The PRNG is seeded, so the dataset is identical on every run.
+
+---
+
+## Configuration
+
+Both halves fail loudly on bad configuration rather than starting up broken. `backend/src/config/env.ts` parses the whole environment through Zod at boot and exits with the offending variable named, so a mistyped secret crashes the deploy instead of surfacing on the first request that needs it.
+
+**Web app** — `.env.local`, or the Vercel project settings:
+
+| Variable | Required | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | yes | **Absolute** URL of the API including `/api/v1` — e.g. `https://inventoryflow-api-exrk.onrender.com/api/v1`. See the warning below. |
+| `NEXT_PUBLIC_APP_NAME` | no | Defaults to `InventoryFlow`. |
+
+**API** — `backend/.env`, or the Render service environment. The full list with commentary is in [`backend/.env.example`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/.env.example); the ones that matter for a cross-site deployment:
+
+| Variable | Notes |
+|---|---|
+| `DATABASE_URL` | Postgres connection string. Use the **pooled** host on Neon. |
+| `DIRECT_URL` | Non-pooled host, used by `prisma migrate`. Falls back to `DATABASE_URL`. |
+| `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` | ≥ 32 chars each, and different from one another. |
+| `CORS_ORIGINS` | Comma-separated exact origins. `https://*.vercel.app` matches one subdomain label, which covers preview deployments. |
+| `COOKIE_SAMESITE` | `none` when the web app is on a different domain to the API, `lax` for same-origin/local. |
+| `COOKIE_SECURE` | `true` in production. `SameSite=None` without `Secure` is rejected by every modern browser. |
+| `GEMINI_API_KEY` | Optional. The restock endpoint falls back to a deterministic engine when empty. |
+
+> **Two deployment footguns, both of which fail silently.**
+>
+> **A blank `NEXT_PUBLIC_API_URL` is worse than a missing one.** `NEXT_PUBLIC_*` values are inlined at build time, and a variable that exists but is empty compiles to `''` — which survives `??`, because it is neither `null` nor `undefined`. Every call then resolves against the web app's own origin, so `POST /auth/login` hits Vercel instead of the API and comes back as the Next.js 404 *HTML* page. The build looks clean and the site looks up. `resolveBaseUrl()` in [`src/lib/api.ts`](src/lib/api.ts) treats blank as unset, and the client rejects any non-JSON response with a message naming the variable, rather than rendering markup into an error banner.
+>
+> **A missing origin in `CORS_ORIGINS` must not be a 500.** The `cors` package forwards `callback(new Error(...))` to Express as a request failure, which turns every preflight from an unlisted origin — including `OPTIONS /auth/login` — into `500 INTERNAL_ERROR`. That reads as a broken server rather than a missing config line. [`backend/src/lib/cors.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/src/lib/cors.ts) returns `callback(null, false)` instead, so the response simply carries no `Access-Control-Allow-Origin` and the browser reports the real reason, while the API logs the exact origin string that needs adding.
 
 ---
 
@@ -153,7 +199,7 @@ Three supporting details:
 - **Retries.** Anything Postgres still rejects as a serialization failure (`P2034`, SQLSTATE `40001`/`40P01`) is retried with full-jitter backoff by `withRetry`.
 - **The pre-flight check is not the safety net.** There *is* a non-locking availability check before the transaction, but it exists purely so a multi-line failure can report every shortfall at once instead of just the first. If stock disappears between that check and the transaction, the atomic `UPDATE` still rejects the order.
 
-Proven by [`tests/orders.test.ts`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/tests/orders.test.ts): 30 concurrent single-unit orders against 20 units of stock yield **exactly 20 × 201 and 10 × 409**, with final stock at 0 and the ledger balanced.
+Proven by [`tests/orders.test.ts`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/tests/orders.test.ts): 30 concurrent single-unit orders against 20 units of stock yield **exactly 20 × 201 and 10 × 409**, with final stock at 0 and the ledger balanced.
 
 ### 2. The double-click
 
@@ -224,7 +270,7 @@ Seven decisions worth defending:
 6. **Cancellation writes compensating entries.** It never edits or deletes the original `OUTBOUND` rows. An append-only ledger stays append-only, so "why is this number what it is?" always has a complete answer.
 7. **Order numbers come from an `OrderSequence` row, not `COUNT(*)`.** A count sees only *committed* rows, so every order placed in the same instant derives the same number and all but one lose the unique-index race — and retrying re-reads the same count, so it never converges. A single `INSERT … ON CONFLICT DO UPDATE … RETURNING` allocates atomically instead. Measured before the fix: 30 concurrent orders against 20 units yielded 8 successes rather than 20 — nothing oversold, but twelve valid orders lost to a numbering artefact. ([ADR-015](docs/ARCHITECTURE.md))
 
-Full schema with commentary: [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/prisma/schema.prisma).
+Full schema with commentary: [`prisma/schema.prisma`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/prisma/schema.prisma).
 
 ---
 
@@ -325,11 +371,31 @@ The e2e suite is `workers: 1` on purpose: parallel workers share one database an
 
 Full walkthrough: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). Summary:
 
-**API → Render.** [`render.yaml`](https://github.com/muhammadMilon/InventoryFlow-api/blob/main/render.yaml) is a blueprint: point Render at the API repo and it provisions the service. Build runs `prisma migrate deploy` — committed migrations only, never `reset`, so a deploy cannot destroy data. JWT secrets are generated by Render, so they never exist outside it. Health check on `/health`. A `Dockerfile` is included as an alternative runtime — non-root user, `tini` for signal forwarding so the graceful shutdown in `server.ts` actually runs on redeploy.
+**API → Render.** [`render.yaml`](https://github.com/muhammadMilon/InventoryFlow-backend/blob/main/render.yaml) is a blueprint: point Render at the API repo and it provisions the service. Build runs `prisma migrate deploy` — committed migrations only, never `reset`, so a deploy cannot destroy data. JWT secrets are generated by Render, so they never exist outside it. Health check on `/health`. A `Dockerfile` is included as an alternative runtime — non-root user, `tini` for signal forwarding so the graceful shutdown in `server.ts` actually runs on redeploy.
 
-**Web → Vercel.** Set `NEXT_PUBLIC_API_URL` to the Render URL + `/api/v1`.
+**Web → Vercel.** Set `NEXT_PUBLIC_API_URL` to the Render URL **plus `/api/v1`** — the whole base path, absolute, no trailing slash. Because it is inlined at build time, changing it requires a redeploy, not just a restart. See the footguns under [Configuration](#configuration).
 
-**The cross-site cookie detail that catches people out.** Vercel and Render are different registrable domains, so the refresh cookie is cross-site. It needs `COOKIE_SAMESITE=none` **and** `COOKIE_SECURE=true` — `SameSite=None` without `Secure` is rejected by every modern browser. And `CORS_ORIGINS` must list the exact Vercel domain: a wildcard is not permitted alongside `credentials: true`.
+**The cross-site cookie detail that catches people out.** Vercel and Render are different registrable domains, so the refresh cookie is cross-site. It needs `COOKIE_SAMESITE=none` **and** `COOKIE_SECURE=true` — `SameSite=None` without `Secure` is rejected by every modern browser. And `CORS_ORIGINS` must list the Vercel domain, because `Access-Control-Allow-Origin: *` is illegal alongside `credentials: true`; the API matches the allow-list and echoes back one exact origin, so `https://*.vercel.app` is a legal *pattern* even though it is never a legal *response*.
+
+**Verifying a deployment.** Three checks, in order — each one isolates a different layer:
+
+```bash
+# 1. Is the API alive and connected to its database?
+curl https://inventoryflow-api-exrk.onrender.com/health
+
+# 2. Does it accept the browser origin? Expect 204 and an
+#    Access-Control-Allow-Origin echoing the origin back.
+curl -i -X OPTIONS https://inventoryflow-api-exrk.onrender.com/api/v1/auth/login \
+  -H "Origin: https://inventory-flow-xi.vercel.app" \
+  -H "Access-Control-Request-Method: POST"
+
+# 3. Is the web app actually pointed at the API? Expect JSON, not HTML —
+#    HTML means NEXT_PUBLIC_API_URL is blank or wrong and the app is
+#    calling its own origin.
+curl -i -X POST https://inventoryflow-api-exrk.onrender.com/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@inventoryflow.dev","password":"Admin@12345"}'
+```
 
 ---
 
@@ -382,9 +448,13 @@ inventoryflow/                   ← this repo: the web app only
 │   ├── API.md                   endpoint reference
 │   └── DEPLOYMENT.md            Render + Vercel + Neon walkthrough
 ├── public/
+│   └── favicon.ico              generated — 16/32/48, for /favicon.ico requests
 ├── scripts/
+│   └── generate-icons.mjs       rasterises icon.svg → favicon.ico + apple-icon
 ├── src/
 │   ├── app/                     App Router: (auth) and (dashboard) groups
+│   │   ├── icon.svg             the mark; source of truth for every icon
+│   │   └── apple-icon.png       generated — 180×180 for iOS
 │   ├── components/
 │   │   ├── charts/              chart kit + eight visualisations
 │   │   ├── layout/              sidebar, topbar, brand
@@ -396,8 +466,12 @@ inventoryflow/                   ← this repo: the web app only
 └── vercel.json
 ```
 
-The API is not in this tree. It is its own repository — [muhammadMilon/InventoryFlow-api](https://github.com/muhammadMilon/InventoryFlow-api), deployed to Render — with `prisma/`, `src/{config,lib,middleware,modules}`, its Jest suite, `render.yaml` and a `Dockerfile`. For local full-stack work it is cloned into `backend/`, which is git-ignored here; see [Quick start](#quick-start).
+The API is not in this tree. It is its own repository — [muhammadMilon/InventoryFlow-backend](https://github.com/muhammadMilon/InventoryFlow-backend), deployed to Render — with `prisma/`, `src/{config,lib,middleware,modules}`, its Jest suite, `render.yaml` and a `Dockerfile`. For local full-stack work it is cloned into `backend/`; see [Quick start](#quick-start).
+
+### Icons
+
+`src/app/icon.svg` is the only hand-edited icon: the same stacked-crate glyph as the in-app wordmark in [`src/components/layout/brand.tsx`](src/components/layout/brand.tsx), so the browser tab and the sidebar can never drift apart. `npm run icons` regenerates `public/favicon.ico` and `src/app/apple-icon.png` from it. Next.js picks up `icon.svg` and `apple-icon.png` by file convention and emits the `<link>` tags itself.
 
 ---
 
-Built by **Muhammad Milon** as a skill assessment. The commit history is organised by concern rather than by session, so each commit stands on its own.
+Built by **Muhammad Milon** as a skill assessment.

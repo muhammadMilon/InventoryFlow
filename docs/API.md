@@ -1,6 +1,6 @@
 # API reference
 
-Base URL: `http://localhost:4000/api/v1` (dev) · `https://<render-app>.onrender.com/api/v1` (prod)
+Base URL: `http://localhost:4000/api/v1` (dev) · `https://inventoryflow-api-exrk.onrender.com/api/v1` ([live](https://inventoryflow-api-exrk.onrender.com/health))
 
 Every response is enveloped:
 

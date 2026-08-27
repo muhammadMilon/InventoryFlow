@@ -34,7 +34,7 @@ backend/.env.local
 !backend/.env.example
 
 # The API is a separate repository deployed to Render. It lives here during
-# development for convenience, but its history belongs to inventoryflow-api.
+# development for convenience, but its history belongs to InventoryFlow-backend.
 backend/
 
 # misc

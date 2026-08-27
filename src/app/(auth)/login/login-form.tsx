@@ -25,6 +25,26 @@ const DEMO_ACCOUNTS = [
   },
 ] as const
 
+/**
+ * Turns an API failure into something the person in front of the screen can act
+ * on.
+ *
+ * `NETWORK_ERROR` gets special handling because of where this is deployed: the
+ * API sits on a free Render instance that sleeps after inactivity, so the first
+ * sign-in of the day can time out while the container wakes. "Sign in failed"
+ * would send someone hunting for a wrong password that isn't wrong.
+ */
+function describeLoginFailure(error: ApiError): string {
+  switch (error.code) {
+    case 'RATE_LIMITED':
+      return 'Too many sign-in attempts. Wait a few minutes before trying again.'
+    case 'NETWORK_ERROR':
+      return 'Could not reach the API. It may be waking from sleep — wait a few seconds and try again.'
+    default:
+      return error.message
+  }
+}
+
 export function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -60,11 +80,7 @@ export function LoginForm() {
       router.replace(redirectTo)
     } catch (caught) {
       if (caught instanceof ApiError) {
-        setError(
-          caught.code === 'RATE_LIMITED'
-            ? 'Too many sign-in attempts. Wait a few minutes before trying again.'
-            : caught.message,
-        )
+        setError(describeLoginFailure(caught))
       } else {
         setError('Sign in failed. Please try again.')
       }
